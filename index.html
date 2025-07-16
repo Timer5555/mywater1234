@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบบันทึกรายการในตู้เย็น + Firebase</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            padding: 30px;
+            text-align: center;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .firebase-config {
+            background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 2px solid #4caf50;
+        }
+
+        .firebase-config h3 {
+            color: #2e7d32;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .telegram-config {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 2px solid #ff9a56;
+        }
+
+        .telegram-config h3 {
+            color: #d63384;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+        }
+
+        .connection-status {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .status-connected {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-disconnected {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .add-item-form {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 2px solid #4facfe;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .item-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border: 2px solid #f0f0f0;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .item-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+
+        .item-card.expiring {
+            border-color: #ff9500;
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+        }
+
+        .item-card.expired {
+            border-color: #dc3545;
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+        }
+
+        .item-name {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .item-details {
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .expiry-date {
+            font-weight: bold;
+            padding: 8px 12px;
+            border-radius: 8px;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        .expiry-normal {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .expiry-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .expiry-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-indicator {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #28a745;
+        }
+
+        .status-indicator.expiring {
+            background: #ffc107;
+        }
+
+        .status-indicator.expired {
+            background: #dc3545;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .notification-log {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid #4facfe;
+            background: white;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #f5c6cb;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #c3e6cb;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .items-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧊 ระบบบันทึกรายการในตู้เย็น</h1>
+            <p>พร้อมฐานข้อมูล Firebase และแจ้งเตือนผ่าน Telegram</p>
+            <div id="connectionStatus" class="connection-status status-disconnected">
+                ❌ ไม่ได้เชื่อมต่อ Firebase
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div id="errorMessage" class="error" style="display: none;"></div>
+            <div id="successMessage" class="success" style="display: none;"></div>
+
+            <!-- การตั้งค่า Firebase -->
+            <div class="firebase-config">
+                <h3>🔥 ตั้งค่า Firebase</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="firebaseConfig">Firebase Config (JSON):</label>
+                        <textarea id="firebaseConfig" rows="4" placeholder='{"apiKey": "your-api-key", "authDomain": "your-project.firebaseapp.com", "projectId": "your-project-id", "storageBucket": "your-project.appspot.com", "messagingSenderId": "123456789", "appId": "your-app-id"}'></textarea>
+                    </div>
+                </div>
+                <button class="btn btn-success" onclick="initializeFirebase()">🔗 เชื่อมต่อ Firebase</button>
+                <button class="btn" onclick="testFirebaseConnection()">🧪 ทดสอบการเชื่อมต่อ</button>
+            </div>
+
+            <!-- การตั้งค่า Telegram -->
+            <div class="telegram-config">
+                <h3>⚙️ ตั้งค่าการแจ้งเตือน Telegram</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="botToken">Bot Token:</label>
+                        <input type="password" id="botToken" placeholder="ใส่ Bot Token ของคุณ">
+                    </div>
+                    <div class="form-group">
+                        <label for="chatId">Chat ID:</label>
+                        <input type="text" id="chatId" placeholder="ใส่ Chat ID ของคุณ">
+                    </div>
+                    <div class="form-group">
+                        <label for="checkInterval">การแจ้งเตือน:</label>
+                        <select id="checkInterval">
+                            <option value="daily" selected>ทุกวันเวลา 6:00 น.</option>
+                            <option value="360">ทุก 6 ชั่วโมง</option>
+                            <option value="720">ทุก 12 ชั่วโมง</option>
+                            <option value="1440">ทุก 24 ชั่วโมง</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn btn-success" onclick="saveTelegramConfig()">💾 บันทึกการตั้งค่า</button>
+                <button class="btn" onclick="testNotification()">🔔 ทดสอบการแจ้งเตือน</button>
+            </div>
+
+            <!-- สถิติรวม -->
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalItems">0</div>
+                    <div class="stat-label">รายการทั้งหมด</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="expiringItems">0</div>
+                    <div class="stat-label">ใกล้หมดอายุ</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="expiredItems">0</div>
+                    <div class="stat-label">หมดอายุแล้ว</div>
+                </div>
+            </div>
+
+            <!-- ฟอร์มเพิ่มรายการ -->
+            <div class="add-item-form">
+                <h3>➕ เพิ่มรายการใหม่</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="itemName">ชื่อรายการ:</label>
+                        <input type="text" id="itemName" placeholder="เช่น นม, ไข่, ผักใส">
+                    </div>
+                    <div class="form-group">
+                        <label for="category">หมวดหมู่:</label>
+                        <select id="category">
+                            <option value="dairy">นมและผลิตภัณฑ์</option>
+                            <option value="meat">เนื้อสัตว์</option>
+                            <option value="vegetables">ผักและผลไม้</option>
+                            <option value="frozen">อาหารแช่แข็ง</option>
+                            <option value="beverages">เครื่องดื่ม</option>
+                            <option value="leftovers">อาหารเหลือ</option>
+                            <option value="condiments">เครื่องปรุง</option>
+                            <option value="others">อื่นๆ</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="expiryDate">วันหมดอายุ:</label>
+                        <input type="date" id="expiryDate">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="quantity">จำนวน:</label>
+                        <input type="number" id="quantity" value="1" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="location">ตำแหน่ง:</label>
+                        <select id="location">
+                            <option value="fridge">ช่องแช่เย็น</option>
+                            <option value="freezer">ช่องแช่แข็ง</option>
+                            <option value="door">ประตูตู้เย็น</option>
+                            <option value="vegetable">ลิ้นชักผัก</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="notes">หมายเหตุ:</label>
+                        <input type="text" id="notes" placeholder="หมายเหตุเพิ่มเติม (ถ้าต้องการ)">
+                    </div>
+                </div>
+                <button class="btn btn-success" onclick="addItem()">➕ เพิ่มรายการ</button>
+            </div>
+
+            <!-- รายการในตู้เย็น -->
+            <div>
+                <h3>📋 รายการในตู้เย็น</h3>
+                <div id="loadingItems" class="loading" style="display: none;">
+                    🔄 กำลังโหลดข้อมูล...
+                </div>
+                <div class="items-grid" id="itemsGrid">
+                    <!-- รายการจะถูกเพิ่มที่นี่ -->
+                </div>
+            </div>
+
+            <!-- บันทึกการแจ้งเตือน -->
+            <div class="notification-log">
+                <h3>📱 บันทึกการแจ้งเตือน</h3>
+                <div id="notificationLog">
+                    <p>ยังไม่มีการแจ้งเตือน</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+
+    <script>
+        // ตัวแปรสำหรับเก็บข้อมูล
+        let db = null;
+        let fridgeItems = [];
+        let telegramConfig = {};
+        let notificationInterval;
+        let isFirebaseConnected = false;
+
+        // โหลดข้อมูลเมื่อเริ่มต้น
+        document.addEventListener('DOMContentLoaded', function() {
+            loadLocalConfig();
+            updateDisplay();
+        });
+
+        // โหลดการตั้งค่าจาก localStorage
+        function loadLocalConfig() {
+            const savedFirebaseConfig = localStorage.getItem('firebaseConfig');
+            const savedTelegramConfig = localStorage.getItem('telegramConfig');
+            
+            if (savedFirebaseConfig) {
+                document.getElementById('firebaseConfig').value = savedFirebaseConfig;
+                try {
+                    const config = JSON.parse(savedFirebaseConfig);
+                    initializeFirebaseWithConfig(config);
+                } catch (error) {
+                    showError('การตั้งค่า Firebase ที่บันทึกไว้ไม่ถูกต้อง');
+                }
+            }
+            
+            if (savedTelegramConfig) {
+                try {
+                    telegramConfig = JSON.parse(savedTelegramConfig);
+                    document.getElementById('botToken').value = telegramConfig.botToken || '';
+                    document.getElementById('chatId').value = telegramConfig.chatId || '';
+                    document.getElementById('checkInterval').value = telegramConfig.checkInterval || 'daily';
+                    startNotificationService();
+                } catch (error) {
+                    showError('การตั้งค่า Telegram ที่บันทึกไว้ไม่ถูกต้อง');
+                }
+            }
+        }
+
+        // เริ่มต้น Firebase
+        function initializeFirebase() {
+            const configText = document.getElementById('firebaseConfig').value;
+            
+            if (!configText) {
+                showError('กรุณาใส่ Firebase Config');
+                return;
+            }
+
+            try {
+                const config = JSON.parse(configText);
+                initializeFirebaseWithConfig(config);
+                
+                // บันทึกการตั้งค่า
+                localStorage.setItem('firebaseConfig', configText);
+                showSuccess('เชื่อมต่อ Firebase สำเร็จ!');
+            } catch (error) {
+                showError('Firebase Config ไม่ถูกต้อง: ' + error.message);
+            }
+        }
+
+        // เริ่มต้น Firebase ด้วย config
+        function initializeFirebaseWithConfig(config) {
+            try {
+                if (firebase.apps.length === 0) {
+                    firebase.initializeApp(config);
+                }
+                db = firebase.firestore();
+                isFirebaseConnected = true;
+                updateConnectionStatus(true);
+                loadDataFromFirebase();
+            } catch (error) {
+                showError('ไม่สามารถเชื่อมต่อ Firebase: ' + error.message);
+                isFirebaseConnected = false;
+                updateConnectionStatus(false);
+            }
+        }
+
+        // อัปเดตสถานะการเชื่อมต่อ
+        function updateConnectionStatus(connected) {
+            const statusElement = document.getElementById('connectionStatus');
+            if (connected) {
+                statusElement.className = 'connection-status status-connected';
+                statusElement.textContent = '✅ เชื่อมต่อ Firebase สำเร็จ';
+            } else {
+                statusElement.className = 'connection-status status-disconnected';
+                statusElement.textContent = '❌ ไม่ได้เชื่อมต่อ Firebase';
+            }
+        }
+
+        // ทดสอบการเชื่อมต่อ Firebase
+        async function testFirebaseConnection() {
+            if (!isFirebaseConnected) {
+                showError('กรุณาเชื่อมต่อ Firebase ก่อน');
+                return;
+            }
+
+            try {
+                // ทดสอบการเขียนข้อมูล
+                await db.collection('test').doc('connection').set({
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    message: 'การเชื่อมต่อทำงานปกติ'
+                });
+                
+                // ทดสอบการอ่านข้อมูล
+                const doc = await db.collection('test').doc('connection').get();
+                if (doc.exists) {
+                    showSuccess('ทดสอบการเชื่อมต่อ Firebase สำเร็จ!');
+                    // ลบข้อมูลทดสอบ
+                    await db.collection('test').doc('connection').delete();
+                } else {
+                    showError('ไม่สามารถอ่านข้อมูลจาก Firebase');
+                }
+            } catch (error) {
+                showError('การทดสอบล้มเหลว: ' + error.message);
+            }
+        }
+
+        // โหลดข้อมูลจาก Firebase
+        async function loadDataFromFirebase() {
+            if (!isFirebaseConnected) return;
+
+            try {
+                showLoading(true);
+                const querySnapshot = await db.collection('fridgeItems').orderBy('addedDate', 'desc').get();
+                
+                fridgeItems = [];
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    fridgeItems.push({
+                        id: doc.id,
+                        ...data
+                    });
+                });
+
+                updateDisplay();
+                showLoading(false);
+            } catch (error) {
+                showError('ไม่สามารถโหลดข้อมูลจาก Firebase: ' + error.message);
+                showLoading(false);
+            }
+        }
+
+        // บันทึกข้อมูลลง Firebase
+        async function saveItemToFirebase(item) {
+            if (!isFirebaseConnected) {
+                showError('กรุณาเชื่อมต่อ Firebase ก่อน');
+                return false;
+            }
+
+            try {
+                if (item.id && typeof item.id === 'string') {
+                    // อัปเดตรายการที่มีอยู่
+                    const { id, ...dataWithoutId } = item;
+                    await db.collection('fridgeItems').doc(id).update(dataWithoutId);
+                } else {
+                    // เพิ่มรายการใหม่
+                    const { id, ...dataWithoutId } = item;
+                    const docRef = await db.collection('fridgeItems').add(dataWithoutId);
+                    return docRef.id;
+                }
+                return true;
+            } catch (error) {
+                showError('ไม่สามารถบันทึกข้อมูล: ' + error.message);
+                return false;
+            }
+        }
+
+        // ลบข้อมูลจาก Firebase
+        async function deleteItemFromFirebase(id) {
+            if (!isFirebaseConnected) {
+                showError('กรุณาเชื่อมต่อ Firebase ก่อน');
+                return false;
+            }
+
+            try {
+                await db.collection('fridgeItems').doc(id).delete();
+                return true;
+            } catch (error) {
+                showError('ไม่สามารถลบข้อมูล: ' + error.message);
+                return false;
+            }
+        }
+
+        // บันทึกการตั้งค่า Telegram
+        function saveTelegramConfig() {
+            const botToken = document.getElementById('botToken').value;
+            const chatId = document.getElementById('chatId').value;
+            const checkInterval = document.getElementById('checkInterval').value;
+
+            if (!botToken || !chatId) {
+                showError('กรุณากรอก Bot Token และ Chat ID');
+                return;
+            }
+
+            telegramConfig = {
+                botToken: botToken,
+                chatId: chatId,
+                checkInterval: checkInterval
+            };
+
+            // บันทึกลง localStorage
+            localStorage.setItem('telegramConfig', JSON.stringify(telegramConfig));
+            
+            showSuccess('บันทึกการตั้งค่า Telegram เรียบร้อยแล้ว');
+            startNotificationService();
+        }
+
+        // เพิ่มรายการใหม่
+        async function addItem() {
+            const name = document.getElementById('itemName').value;
+            const category = document.getElementById('category').value;
+            const expiryDate = document.getElementById('expiryDate').value;
+            const quantity = document.getElementById('quantity').value;
+            const location = document.getElementById('location').value;
+            const notes = document.getElementById('notes').value;
+
+            if (!name || !expiryDate) {
+                showError('กรุณากรอกชื่อรายการและวันหมดอายุ');
+                return;
+            }
+
+            const newItem = {
+                name: name,
+                category: category,
+                expiryDate: expiryDate,
+                quantity: parseInt(quantity),
+                location: location,
+                notes: notes,
+                addedDate: new Date().toISOString().split('T')[0]
+            };
+
+            const savedId = await saveItemToFirebase(newItem);
+            if (savedId) {
+                newItem.id = savedId;
+                fridgeItems.unshift(newItem);
+                updateDisplay();
+                clearForm();
+                showSuccess('เพิ่มรายการเรียบร้อยแล้ว');
+            }
+        }
+
+        // ลบรายการ
+        async function deleteItem(id) {
+            if (!confirm('คุณต้องการลบรายการนี้หรือไม่?')) {
+                return;
+            }
+
+            const success = await deleteItemFromFirebase(id);
+            if (success) {
+                fridgeItems = fridgeItems.filter(item => item.id !== id);
+                updateDisplay();
+                showSuccess('ลบรายการเรียบร้อยแล้ว');
+            }
+        }
+
+        // อัปเดตการแสดงผล
+        function updateDisplay() {
+            updateStats();
+            displayItems();
+        }
+
+        // อัปเดตสถิติ
+        function updateStats() {
+            const now = new Date();
+            const threeDaysLater = new Date(now.getTime() + (3 * 24 * 60 * 60 * 1000));
+
+            let totalItems = fridgeItems.length;
+            let expiringItems = 0;
+            let expiredItems = 0;
+
+            fridgeItems.forEach(item => {
+                const expiryDate = new Date(item.expiryDate);
+                if (expiryDate < now) {
+                    expiredItems++;
+                } else if (expiryDate <= threeDaysLater) {
+                    expiringItems++;
+                }
+            });
+
+            document.getElementById('totalItems').textContent = totalItems;
+            document.getElementById('expiringItems').textContent = expiringItems;
+            document.getElementById('expiredItems').textContent = expiredItems;
+        }
+
+        // แสดงรายการ
+        function displayItems() {
+            const grid = document.getElementById('itemsGrid');
+            grid.innerHTML = '';
+
+            if (fridgeItems.length === 0) {
+                grid.innerHTML = '<p style="text-align: center; grid-column: 1 / -1; color: #666;">ยังไม่มีรายการในตู้เย็น</p>';
+                return;
+            }
+
+            fridgeItems.forEach(item => {
+                const itemCard = createItemCard(item);
+                grid.appendChild(itemCard);
+            });
+        }
+
+        // สร้างการ์ดรายการ
+        function createItemCard(item) {
+            const card = document.createElement('div');
+            const now = new Date();
+            const expiryDate = new Date(item.expiryDate);
+            const daysUntilExpiry = Math.ceil((expiryDate - now) / (1000 * 60 * 60 * 24));
+
+            let cardClass = 'item-card';
+            let statusClass = '';
+            let expiryClass = 'expiry-normal';
+
+            if (daysUntilExpiry < 0) {
+                cardClass += ' expired';
+                statusClass = 'expired';
+                expiryClass = 'expiry-danger';
+            } else if (daysUntilExpiry <= 3) {
+                cardClass += ' expiring';
+                statusClass = 'expiring';
+                expiryClass = 'expiry-warning';
+            }
+
+            const categoryNames = {
+                dairy: 'นมและผลิตภัณฑ์',
+                meat: 'เนื้อสัตว์',
+                vegetables: 'ผักและผลไม้',
+                frozen: 'อาหารแช่แข็ง',
+                beverages: 'เครื่องดื่ม',
+                leftovers: 'อาหารเหลือ',
+                condiments: 'เครื่องปรุง',
+                others: 'อื่นๆ'
+            };
+
+            const locationNames = {
+                fridge: 'ช่องแช่เย็น',
+                freezer: 'ช่องแช่แข็ง',
+                door: 'ประตูตู้เย็น',
+                vegetable: 'ลิ้นชักผัก'
+            };
+
+            card.className = cardClass;
+            card.innerHTML = `
+                <div class="status-indicator ${statusClass}"></div>
+                <div class="item-name">${item.name}</div>
+                <div class="item-details">
+                    <div><strong>หมวดหมู่:</strong> ${categoryNames[item.category]}</div>
+                    <div><strong>จำนวน:</strong> ${item.quantity}</div>
+                    <div><strong>ตำแหน่ง:</strong> ${locationNames[item.location]}</div>
+                    ${item.notes ? `<div><strong>หมายเหตุ:</strong> ${item.notes}</div>` : ''}
+                    <div><strong>เพิ่มเมื่อ:</strong> ${formatDate(item.addedDate)}</div>
+                </div>
+                <div class="expiry-date ${expiryClass}">
+                    หมดอายุ: ${formatDate(item.expiryDate)}
+                    ${daysUntilExpiry >= 0 ? `(อีก ${daysUntilExpiry} วัน)` : `(เกิน ${Math.abs(daysUntilExpiry)} วัน)`}
+                </div>
+                <div style="margin-top: 15px;">
+                    <button class="btn" onclick="editItem('${item.id}')">✏️ แก้ไข</button>
+                    <button class="btn btn-danger" onclick="deleteItem('${item.id}')">🗑️ ลบ</button>
+                </div>
+            `;
+
+            return card;
+        }
+
+        // แก้ไขรายการ
+        function editItem(id) {
+            const item = fridgeItems.find(item => item.id === id);
+            if (!item) return;
+
+            document.getElementById('itemName').value = item.name;
+            document.getElementById('category').value = item.category;
+            document.getElementById('expiryDate').value = item.expiryDate;
+            document.getElementById('quantity').value = item.quantity;
+            document.getElementById('location').value = item.location;
+            document.getElementById('notes').value = item.notes;
+
+            // เปลี่ยนปุ่มเป็นโหมดแก้ไข
+            const addButton = document.querySelector('.add-item-form button');
+            addButton.textContent = '💾 บันทึกการแก้ไข';
+            addButton.onclick = () => updateItem(id);
+            
+            // เลื่อนไปที่ฟอร์ม
+            document.querySelector('.add-item-form').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // อัปเดตรายการ
+        async function updateItem(id) {
+            const name = document.getElementById('itemName').value;
+            const category = document.getElementById('category').value;
+            const expiryDate = document.getElementById('expiryDate').value;
+            const quantity = document.getElementById('quantity').value;
+            const location = document.getElementById('location').value;
+            const notes = document.getElementById('notes').value;
+
+            if (!name || !expiryDate) {
+                showError('กรุณากรอกชื่อรายการและวันหมดอายุ');
+                return;
+            }
+
+            const updatedItem = {
+                id: id,
+                name: name,
+                category: category,
+                expiryDate: expiryDate,
+                quantity: parseInt(quantity),
+                location: location,
+                notes: notes,
+                addedDate: fridgeItems.find(item => item.id === id).addedDate // คงวันที่เพิ่มเดิม
+            };
+
+            const success = await saveItemToFirebase(updatedItem);
+            if (success) {
+                const index = fridgeItems.findIndex(item => item.id === id);
+                if (index !== -1) {
+                    fridgeItems[index] = updatedItem;
+                }
+                updateDisplay();
+                resetForm();
+                showSuccess('อัปเดตรายการเรียบร้อยแล้ว');
+            }
+        }
+
+        // รีเซ็ตฟอร์มกลับสู่โหมดเพิ่ม
+        function resetForm() {
+            clearForm();
+            const addButton = document.querySelector('.add-item-form button');
+            addButton.textContent = '➕ เพิ่มรายการ';
+            addButton.onclick = addItem;
+        }
+
+        // ล้างฟอร์ม
+        function clearForm() {
+            document.getElementById('itemName').value = '';
+            document.getElementById('expiryDate').value = '';
+            document.getElementById('quantity').value = '1';
+            document.getElementById('notes').value = '';
+        }
+
+        // จัดรูปแบบวันที่
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const options = { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                locale: 'th-TH'
+            };
+            return date.toLocaleDateString('th-TH', options);
+        }
+
+        // ส่งข้อความไปยัง Telegram
+        async function sendTelegramMessage(message) {
+            if (!telegramConfig.botToken || !telegramConfig.chatId) {
+                console.log('Telegram config not set');
+                return false;
+            }
+
+            try {
+                const response = await fetch(`https://api.telegram.org/bot${telegramConfig.botToken}/sendMessage`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        chat_id: telegramConfig.chatId,
+                        text: message,
+                        parse_mode: 'HTML'
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.ok) {
+                    addNotificationLog('✅ ส่งข้อความสำเร็จ: ' + message.substring(0, 50) + '...');
+                    return true;
+                } else {
+                    addNotificationLog('❌ ส่งข้อความไม่สำเร็จ: ' + result.description);
+                    return false;
+                }
+            } catch (error) {
+                addNotificationLog('❌ เกิดข้อผิดพลาด: ' + error.message);
+                return false;
+            }
+        }
+
+        // ทดสอบการแจ้งเตือน
+        async function testNotification() {
+            if (!telegramConfig.botToken || !telegramConfig.chatId) {
+                showError('กรุณาตั้งค่า Telegram ก่อน');
+                return;
+            }
+
+            const today = new Date();
+            const message = `🧊 <b>ทดสอบระบบแจ้งเตือนตู้เย็น</b>
+
+📅 วันที่: ${today.toLocaleDateString('th-TH')}
+⏰ เวลา: ${today.toLocaleTimeString('th-TH')}
+
+✅ ระบบแจ้งเตือนทำงานปกติ!
+
+🔔 <b>การตั้งค่า:</b>
+• แจ้งเตือนทุกวันเวลา 6:00 น.
+• เตือนเฉพาะของที่หมดอายุในวันนั้น
+• จำนวนรายการในตู้เย็น: ${fridgeItems.length}
+• ฐานข้อมูล: ${isFirebaseConnected ? 'Firebase ✅' : 'ไม่ได้เชื่อมต่อ ❌'}`;
+
+            const success = await sendTelegramMessage(message);
+            if (success) {
+                showSuccess('ทดสอบการแจ้งเตือนสำเร็จ! ตรวจสอบใน Telegram');
+            } else {
+                showError('ไม่สามารถส่งข้อความได้ กรุณาตรวจสอบการตั้งค่า');
+            }
+        }
+
+        // ตรวจสอบรายการที่หมดอายุในวันนั้น
+        function checkExpiringItems() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            
+            // หารายการที่หมดอายุในวันนี้
+            const expiringToday = fridgeItems.filter(item => {
+                const expiryDate = new Date(item.expiryDate);
+                expiryDate.setHours(0, 0, 0, 0);
+                return expiryDate.getTime() === today.getTime();
+            });
+
+            // หารายการที่หมดอายุแล้ว
+            const expiredItems = fridgeItems.filter(item => {
+                const expiryDate = new Date(item.expiryDate);
+                expiryDate.setHours(0, 0, 0, 0);
+                return expiryDate < today;
+            });
+
+            if (expiringToday.length > 0 || expiredItems.length > 0) {
+                let message = '🧊 <b>แจ้งเตือนตู้เย็น - 6:00 น.</b>\n\n';
+                message += `📅 วันที่: ${today.toLocaleDateString('th-TH')}\n\n`;
+
+                if (expiringToday.length > 0) {
+                    message += '⚠️ <b>รายการที่หมดอายุวันนี้:</b>\n';
+                    expiringToday.forEach(item => {
+                        const locationNames = {
+                            fridge: 'ช่องแช่เย็น',
+                            freezer: 'ช่องแช่แข็ง',
+                            door: 'ประตูตู้เย็น',
+                            vegetable: 'ลิ้นชักผัก'
+                        };
+                        message += `• ${item.name} (${item.quantity} ${locationNames[item.location]})\n`;
+                    });
+                    message += '\n';
+                }
+
+                if (expiredItems.length > 0) {
+                    message += '❌ <b>รายการที่หมดอายุแล้ว:</b>\n';
+                    expiredItems.forEach(item => {
+                        const daysOverdue = Math.ceil((today - new Date(item.expiryDate)) / (1000 * 60 * 60 * 24));
+                        message += `• ${item.name} (เกิน ${daysOverdue} วัน)\n`;
+                    });
+                    message += '\n';
+                }
+
+                message += '💡 <b>คำแนะนำ:</b>\n';
+                message += '• ตรวจสอบรายการที่หมดอายุวันนี้\n';
+                message += '• ใช้หรือทิ้งรายการที่หมดอายุแล้ว\n';
+                message += '• วางแผนการใช้อาหารให้เหมาะสม';
+                
+                sendTelegramMessage(message);
+            } else {
+                const message = `🧊 <b>แจ้งเตือนตู้เย็น - 6:00 น.</b>\n\n📅 วันที่: ${today.toLocaleDateString('th-TH')}\n\n✅ <b>ไม่มีรายการหมดอายุวันนี้</b>\n\n📊 สถิติ:\n• รายการทั้งหมด: ${fridgeItems.length}\n• ทั้งหมดยังคงสดใหม่ 🎉`;
+                sendTelegramMessage(message);
+            }
+        }
+
+        // เริ่มต้นระบบแจ้งเตือน
+        function startNotificationService() {
+            if (notificationInterval) {
+                clearInterval(notificationInterval);
+            }
+
+            if (telegramConfig.checkInterval) {
+                if (telegramConfig.checkInterval === 'daily') {
+                    scheduleDailyNotification();
+                    addNotificationLog('🔔 เริ่มต้นระบบแจ้งเตือนทุกวันเวลา 6:00 น.');
+                } else {
+                    checkExpiringItems();
+                    notificationInterval = setInterval(() => {
+                        checkExpiringItems();
+                    }, telegramConfig.checkInterval * 60 * 1000);
+                    addNotificationLog(`🔔 เริ่มต้นระบบแจ้งเตือน (ตรวจสอบทุก ${telegramConfig.checkInterval} นาที)`);
+                }
+            }
+        }
+
+        // ตั้งเวลาแจ้งเตือนทุกวันเวลา 6:00 น.
+        function scheduleDailyNotification() {
+            const now = new Date();
+            const targetTime = new Date();
+            targetTime.setHours(6, 0, 0, 0);
+
+            if (now > targetTime) {
+                targetTime.setDate(targetTime.getDate() + 1);
+            }
+
+            const timeUntilTarget = targetTime - now;
+
+            setTimeout(() => {
+                checkExpiringItems();
+                notificationInterval = setInterval(() => {
+                    checkExpiringItems();
+                }, 24 * 60 * 60 * 1000);
+            }, timeUntilTarget);
+
+            const timeUntilText = Math.ceil(timeUntilTarget / (1000 * 60 * 60));
+            addNotificationLog(`⏰ การแจ้งเตือนครั้งถัดไปในอีก ${timeUntilText} ชั่วโมง (6:00 น. พรุ่งนี้)`);
+        }
+
+        // เพิ่มบันทึกการแจ้งเตือน
+        function addNotificationLog(message) {
+            const logContainer = document.getElementById('notificationLog');
+            const logItem = document.createElement('div');
+            logItem.className = 'notification-item';
+            logItem.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>${message}</span>
+                    <small style="color: #666;">${new Date().toLocaleString('th-TH')}</small>
+                </div>
+            `;
+            
+            if (logContainer.children.length === 1 && logContainer.textContent.includes('ยังไม่มีการแจ้งเตือน')) {
+                logContainer.innerHTML = '';
+            }
+            
+            logContainer.insertBefore(logItem, logContainer.firstChild);
+            
+            while (logContainer.children.length > 10) {
+                logContainer.removeChild(logContainer.lastChild);
+            }
+        }
+
+        // แสดงข้อความแจ้งเตือน
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('successMessage');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            setTimeout(() => {
+                successDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        function showLoading(show) {
+            const loadingDiv = document.getElementById('loadingItems');
+            loadingDiv.style.display = show ? 'block' : 'none';
+        }
+
+        // ฟังก์ชันสำรองข้อมูล
+        async function backupData() {
+            if (!isFirebaseConnected) {
+                showError('กรุณาเชื่อมต่อ Firebase ก่อน');
+                return;
+            }
+
+            try {
+                const backup = {
+                    items: fridgeItems,
+                    telegramConfig: telegramConfig,
+                    exportDate: new Date().toISOString(),
+                    totalItems: fridgeItems.length
+                };
+                
+                const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `fridge_backup_${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                
+                showSuccess('สำรองข้อมูลเรียบร้อยแล้ว');
+            } catch (error) {
+                showError('ไม่สามารถสำรองข้อมูลได้: ' + error.message);
+            }
+        }
+
+        // ฟังก์ชันนำเข้าข้อมูล
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.items && Array.isArray(data.items)) {
+                        if (!isFirebaseConnected) {
+                            showError('กรุณาเชื่อมต่อ Firebase ก่อนนำเข้าข้อมูล');
+                            return;
+                        }
+
+                        // นำเข้าข้อมูลลง Firebase
+                        const batch = db.batch();
+                        data.items.forEach(item => {
+                            const { id, ...itemData } = item;
+                            const docRef = db.collection('fridgeItems').doc();
+                            batch.set(docRef, itemData);
+                        });
+                        
+                        await batch.commit();
+                        await loadDataFromFirebase();
+                        showSuccess('นำเข้าข้อมูลสำเร็จ!');
+                    } else {
+                        showError('ไฟล์ข้อมูลไม่ถูกต้อง');
+                    }
+                } catch (error) {
+                    showError('ไม่สามารถอ่านไฟล์ได้: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // ฟังก์ชันล้างข้อมูลทั้งหมด
+        async function clearAllData() {
+            if (!confirm('คุณต้องการล้างข้อมูลทั้งหมดหรือไม่? การดำเนินการนี้ไม่สามารถยกเลิกได้')) {
+                return;
+            }
+
+            if (!isFirebaseConnected) {
+                showError('กรุณาเชื่อมต่อ Firebase ก่อน');
+                return;
+            }
+
+            try {
+                const batch = db.batch();
+                fridgeItems.forEach(item => {
+                    const docRef = db.collection('fridgeItems').doc(item.id);
+                    batch.delete(docRef);
+                });
+                
+                await batch.commit();
+                fridgeItems = [];
+                updateDisplay();
+                showSuccess('ล้างข้อมูลทั้งหมดเรียบร้อยแล้ว');
+            } catch (error) {
+                showError('ไม่สามารถล้างข้อมูลได้: ' + error.message);
+            }
+        }
+
+        // เพิ่มปุ่มจัดการข้อมูล
+        function addDataManagementButtons() {
+            const managementDiv = document.createElement('div');
+            managementDiv.innerHTML = `
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-top: 20px;">
+                    <h3>📊 จัดการข้อมูล</h3>
+                    <button class="btn" onclick="backupData()">💾 สำรองข้อมูล</button>
+                    <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(event)">
+                    <button class="btn" onclick="document.getElementById('importFile').click()">📥 นำเข้าข้อมูล</button>
+                    <button class="btn btn-danger" onclick="clearAllData()">🗑️ ล้างข้อมูลทั้งหมด</button>
+                </div>
+            `;
+            document.querySelector('.main-content').appendChild(managementDiv);
+        }
+
+        // เพิ่มปุ่มจัดการข้อมูลเมื่อโหลดหน้าเสร็จ
+        document.addEventListener('DOMContentLoaded', function() {
+            addDataManagementButtons();
+        });
+    </script>
+</body>
+</html>
