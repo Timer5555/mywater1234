@@ -4,8 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Water Meter Hub</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js for charts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* Custom font and animations */
@@ -36,9 +39,11 @@
 
     <div id="app-container" class="container mx-auto p-4 md:p-6 lg:p-8 max-w-5xl">
 
+        <!-- Header -->
         <header class="mb-8 text-center">
             <div class="flex justify-between items-center">
-                <div></div> <div class="flex-grow">
+                <div></div> <!-- Spacer -->
+                <div class="flex-grow">
                     <h1 class="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">
                         Water Meter Hub
                     </h1>
@@ -51,10 +56,12 @@
             </div>
         </header>
 
+        <!-- Loading Indicator -->
         <div id="loading-indicator" class="flex items-center justify-center h-64">
             <div class="text-xl text-slate-600">กำลังโหลด...</div>
         </div>
         
+        <!-- Auth View (Login/Register) -->
         <div id="auth-view" class="max-w-md mx-auto bg-white p-8 rounded-xl shadow-lg hidden">
             <h2 class="text-2xl font-bold text-center mb-6 text-slate-800">เข้าสู่ระบบ</h2>
             <div id="auth-error" class="bg-red-100 text-red-700 p-3 rounded-lg mb-4 hidden"></div>
@@ -69,11 +76,13 @@
                 </div>
                 <div class="flex flex-col sm:flex-row gap-4 pt-2">
                     <button type="submit" class="w-full flex-1 bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-blue-700 transition-colors">เข้าสู่ระบบ</button>
-                    </div>
+                </div>
             </form>
         </div>
 
+        <!-- Main App Content (hidden until logged in) -->
         <div id="app-content" class="hidden">
+            <!-- House List View -->
             <div id="house-list-view">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-2xl font-semibold text-slate-700">รายการบ้าน</h2>
@@ -89,6 +98,7 @@
                 </div>
             </div>
 
+            <!-- House Detail View -->
             <div id="house-detail-view" class="hidden animate-fade-in">
                 <div class="bg-white p-6 rounded-xl shadow-lg">
                     <div class="flex flex-col sm:flex-row justify-between sm:items-start mb-6">
@@ -134,6 +144,7 @@
         </div>
     </div>
 
+    <!-- Modals -->
     <div id="add-house-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 hidden">
         <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md animate-scale-up">
             <h2 class="text-2xl font-bold mb-6 text-slate-800">เพิ่มบ้านใหม่</h2>
@@ -217,6 +228,7 @@
             </div>
         </div>
     </div>
+    <!-- Image Preview Modal -->
     <div id="image-preview-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 hidden">
         <div class="relative bg-white p-4 rounded-xl shadow-2xl max-w-3xl max-h-[90vh] animate-scale-up">
             <button id="close-preview-btn" class="absolute -top-3 -right-3 bg-white rounded-full p-1 text-slate-800 hover:bg-slate-200">
@@ -226,8 +238,9 @@
         </div>
     </div>
 
+    <!-- Apps Script Logic -->
     <script>
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzoAmyK4zCsAqntP8iPde-ZlWTGoSoUB5inmLyOted2-dtwiFlS-doAcGpIwFXE5Rh_/exec'; // Replace with your Web App URL
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzoAmyK4zCsAqntP8iPde-ZlWTGoSoUB5inmLyOted2-dtwiFlS-doAcGpIwFXE5Rh_/exec';
         
         let currentUser = null;
         let houses = [];
@@ -243,8 +256,15 @@
         const houseDetailView = document.getElementById('house-detail-view');
         const houseListContainer = document.getElementById('house-list-container');
         const noHousesMessage = document.getElementById('no-houses-message');
+        const addHouseModal = document.getElementById('add-house-modal');
+        const addReadingModal = document.getElementById('add-reading-modal');
+        const editReadingModal = document.getElementById('edit-reading-modal');
+        const confirmModal = document.getElementById('confirm-modal');
         const imagePreviewModal = document.getElementById('image-preview-modal');
         const previewImageElement = document.getElementById('preview-image-element');
+        const confirmModalText = document.getElementById('confirm-modal-text');
+        const confirmOkBtn = document.getElementById('confirm-modal-ok');
+        const confirmCancelBtn = document.getElementById('confirm-modal-cancel');
 
         const toBase64 = file => new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -413,20 +433,10 @@
             });
         }
 
-        const addHouseModal = document.getElementById('add-house-modal');
-        const addReadingModal = document.getElementById('add-reading-modal');
-        const editReadingModal = document.getElementById('edit-reading-modal');
-        const confirmModal = document.getElementById('confirm-modal');
-        const imagePreviewModal = document.getElementById('image-preview-modal');
-
         function openModal(modal) { modal.classList.remove('hidden'); }
         function closeModal(modal) { modal.classList.add('hidden'); }
 
         function showConfirm(text, onConfirm) {
-            const confirmModalText = document.getElementById('confirm-modal-text');
-            const confirmOkBtn = document.getElementById('confirm-modal-ok');
-            const confirmCancelBtn = document.getElementById('confirm-modal-cancel');
-
             confirmModalText.textContent = text;
             confirmModal.classList.remove('hidden');
             const newOkBtn = confirmOkBtn.cloneNode(true);
