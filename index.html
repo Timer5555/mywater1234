@@ -1,237 +1,701 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Water Meter Hub</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;700&display=swap');
-    body { font-family: 'Sarabun', sans-serif; }
-    .hidden { display: none; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Water Meter Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Custom font and animations */
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Sarabun', sans-serif;
+        }
+        .hidden {
+            display: none;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        @keyframes scaleUp {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .animate-scale-up {
+            animation: scaleUp 0.3s ease-out forwards;
+        }
+    </style>
 </head>
 <body class="bg-slate-50 text-slate-800">
-  <div class="container mx-auto p-6 max-w-4xl">
-    <!-- Header -->
-    <header class="mb-8 flex justify-between items-center">
-      <h1 class="text-3xl font-bold text-blue-600">💧 Water Meter Hub</h1>
-      <div id="user-info" class="hidden">
-        <span id="user-email" class="mr-4 text-slate-600"></span>
-        <button id="logout-btn" class="text-blue-600">ออกจากระบบ</button>
-      </div>
-    </header>
 
-    <!-- Loading -->
-    <div id="loading-indicator" class="text-center">กำลังโหลด...</div>
+    <div id="app-container" class="container mx-auto p-4 md:p-6 lg:p-8 max-w-5xl">
 
-    <!-- Login -->
-    <div id="auth-view" class="max-w-md mx-auto bg-white p-6 rounded shadow hidden">
-      <h2 class="text-xl font-bold mb-4">เข้าสู่ระบบ</h2>
-      <div id="auth-error" class="text-red-600 mb-3 hidden"></div>
-      <form id="login-form" class="space-y-3">
-        <input id="login-email" type="email" placeholder="อีเมล" class="w-full border p-2 rounded" required>
-        <input id="login-password" type="password" placeholder="รหัสผ่าน" class="w-full border p-2 rounded" required>
-        <button class="w-full bg-blue-600 text-white py-2 rounded">เข้าสู่ระบบ</button>
-      </form>
+        <header class="mb-8 text-center">
+            <div class="flex justify-between items-center">
+                <div></div> <div class="flex-grow">
+                    <h1 class="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">
+                        Water Meter Hub
+                    </h1>
+                    <p class="text-slate-500 mt-2">แอปบันทึกและวิเคราะห์การใช้น้ำ</p>
+                </div>
+                <div id="user-info" class="text-right hidden">
+                    <p id="user-email" class="text-sm text-slate-600"></p>
+                    <button id="logout-btn" class="text-sm text-blue-600 hover:underline">ออกจากระบบ</button>
+                </div>
+            </div>
+        </header>
+
+        <div id="loading-indicator" class="flex items-center justify-center h-64">
+            <div class="text-xl text-slate-600">กำลังโหลด...</div>
+        </div>
+        
+        <div id="auth-view" class="max-w-md mx-auto bg-white p-8 rounded-xl shadow-lg hidden">
+            <h2 class="text-2xl font-bold text-center mb-6 text-slate-800">เข้าสู่ระบบ</h2>
+            <div id="auth-error" class="bg-red-100 text-red-700 p-3 rounded-lg mb-4 hidden"></div>
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label for="login-email" class="block text-sm font-medium text-slate-600">อีเมล</label>
+                    <input type="email" id="login-email" required class="mt-1 w-full border-slate-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="login-password" class="block text-sm font-medium text-slate-600">รหัสผ่าน</label>
+                    <input type="password" id="login-password" required class="mt-1 w-full border-slate-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="flex flex-col sm:flex-row gap-4 pt-2">
+                    <button type="submit" class="w-full flex-1 bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-blue-700 transition-colors">เข้าสู่ระบบ</button>
+                    </div>
+            </form>
+        </div>
+
+        <div id="app-content" class="hidden">
+            <div id="house-list-view">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-semibold text-slate-700">รายการบ้าน</h2>
+                    <button id="add-house-btn" class="flex items-center bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-blue-700 transition-all duration-300 transform hover:scale-105">
+                        <i data-lucide="plus" class="mr-2 h-5 w-5"></i> เพิ่มบ้าน
+                    </button>
+                </div>
+                <div id="house-list-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                <div id="no-houses-message" class="text-center py-16 px-6 bg-white rounded-lg shadow-md hidden">
+                    <i data-lucide="home" class="mx-auto h-12 w-12 text-slate-400 mb-4"></i>
+                    <h3 class="text-xl font-semibold text-slate-600">ยังไม่มีบ้านในระบบ</h3>
+                    <p class="text-slate-500 mt-2">กดปุ่ม "เพิ่มบ้าน" เพื่อเริ่มต้นใช้งาน</p>
+                </div>
+            </div>
+
+            <div id="house-detail-view" class="hidden animate-fade-in">
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <div class="flex flex-col sm:flex-row justify-between sm:items-start mb-6">
+                        <div>
+                            <button id="back-to-list-btn" class="flex items-center text-blue-600 hover:underline mb-4">
+                                <i data-lucide="arrow-left" class="mr-2 h-4 w-4"></i> กลับไปหน้ารายการ
+                            </button>
+                            <h2 id="house-detail-name" class="text-3xl font-bold text-slate-800"></h2>
+                        </div>
+                        <button id="add-reading-btn" class="mt-4 sm:mt-0 flex items-center bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-blue-700 transition-all duration-300">
+                            <i data-lucide="plus" class="mr-2 h-5 w-5"></i> จดมิเตอร์
+                        </button>
+                    </div>
+                    <div id="chart-section" class="mb-8 hidden">
+                        <h3 class="text-xl font-semibold mb-4 text-slate-700 flex items-center"><i data-lucide="bar-chart-2" class="mr-2 h-5 w-5"></i>ภาพรวมการใช้งาน</h3>
+                        <div class="h-64 md:h-80 bg-slate-50 p-4 rounded-lg">
+                            <canvas id="usage-chart"></canvas>
+                        </div>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-4 text-slate-700">ประวัติการจดมิเตอร์</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-slate-100 text-slate-600">
+                                <tr>
+                                    <th class="p-3 rounded-l-lg">วันที่</th>
+                                    <th class="p-3">เลขมิเตอร์</th>
+                                    <th class="p-3">ปริมาณที่ใช้ (หน่วย)</th>
+                                    <th class="p-3">รูปภาพ</th>
+                                    <th class="p-3 rounded-r-lg">จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="readings-table-body"></tbody>
+                        </table>
+                        <div id="no-readings-message" class="text-center py-8 text-slate-500 hidden">ยังไม่มีข้อมูลการจดมิเตอร์</div>
+                    </div>
+                    <div class="mt-8 text-right">
+                        <button id="delete-house-btn" class="flex items-center ml-auto bg-red-500 text-white text-sm font-semibold py-2 px-3 rounded-lg shadow-md hover:bg-red-600 transition-colors">
+                            <i data-lucide="trash-2" class="mr-2 h-4 w-4"></i> ลบบ้านหลังนี้
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Main -->
-    <div id="app-content" class="hidden">
-      <!-- Houses -->
-      <div id="house-list-view">
-        <div class="flex justify-between mb-4">
-          <h2 class="text-xl font-semibold">🏠 รายการบ้าน</h2>
-          <button id="add-house-btn" class="bg-blue-600 text-white px-4 py-2 rounded">+ เพิ่มบ้าน</button>
+    <div id="add-house-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 hidden">
+        <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md animate-scale-up">
+            <h2 class="text-2xl font-bold mb-6 text-slate-800">เพิ่มบ้านใหม่</h2>
+            <form id="add-house-form">
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">ชื่อบ้าน / ที่อยู่</label>
+                    <input id="house-name-input" type="text" class="w-full border-slate-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="เช่น บ้านเลขที่ 123/45" required>
+                </div>
+                <div class="flex justify-end gap-4 mt-8">
+                    <button type="button" class="btn-cancel bg-slate-200 text-slate-800 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors">ยกเลิก</button>
+                    <button type="submit" class="bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-colors">บันทึก</button>
+                </div>
+            </form>
         </div>
-        <div id="house-list-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
-        <p id="no-houses-message" class="text-center text-slate-500 hidden">ยังไม่มีบ้าน</p>
-      </div>
-
-      <!-- House Detail -->
-      <div id="house-detail-view" class="hidden">
-        <button id="back-to-list-btn" class="text-blue-600 mb-3">← กลับ</button>
-        <h2 id="house-detail-name" class="text-2xl font-bold mb-3"></h2>
-        <button id="add-reading-btn" class="bg-blue-600 text-white px-4 py-2 rounded mb-4">+ จดมิเตอร์</button>
-        <div id="chart-section" class="mb-6 hidden">
-          <canvas id="usage-chart" height="150"></canvas>
-        </div>
-        <table class="w-full border text-left">
-          <thead class="bg-slate-100">
-            <tr><th class="p-2">วันที่</th><th class="p-2">เลขมิเตอร์</th><th class="p-2">ปริมาณใช้</th></tr>
-          </thead>
-          <tbody id="readings-table-body"></tbody>
-        </table>
-      </div>
     </div>
-  </div>
-
-  <!-- Modal Add House -->
-  <div id="add-house-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
-    <div class="bg-white p-6 rounded shadow w-full max-w-sm">
-      <h3 class="text-lg font-bold mb-3">เพิ่มบ้าน</h3>
-      <form id="add-house-form">
-        <input id="house-name-input" type="text" class="w-full border p-2 mb-3" placeholder="ชื่อบ้าน" required>
-        <div class="flex justify-end gap-2">
-          <button type="button" onclick="closeModal(addHouseModal)" class="px-3 py-1 bg-gray-300 rounded">ยกเลิก</button>
-          <button class="px-3 py-1 bg-blue-600 text-white rounded">บันทึก</button>
+    <div id="add-reading-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 hidden">
+        <div class="bg-white rounded-xl shadow-2xl p-6 md:p-8 w-full max-w-md animate-scale-up">
+            <h2 class="text-2xl font-bold mb-6 text-slate-800">จดมิเตอร์น้ำ</h2>
+            <div id="add-reading-error" class="bg-red-100 text-red-700 p-3 rounded-lg mb-4 hidden"></div>
+            <form id="add-reading-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">วันที่</label>
+                    <input id="add-reading-date" type="date" class="w-full border-slate-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                </div>
+                <div class="p-4 border-2 border-dashed border-slate-300 rounded-lg text-center">
+                    <input type="file" accept="image/*" id="add-image-upload" class="hidden">
+                    <button type="button" id="add-image-btn" class="flex items-center justify-center w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-3 px-4 rounded-lg transition-colors">
+                        <i data-lucide="upload" class="mr-2 h-5 w-5"></i> <span id="add-image-text">อัปโหลดรูปมิเตอร์</span>
+                    </button>
+                    <img id="add-image-preview" src="" alt="Preview" class="mt-4 rounded-lg max-h-40 mx-auto hidden"/>
+                </div>
+                <button type="button" id="scan-image-btn" class="w-full flex items-center justify-center bg-green-500 text-white font-semibold py-3 px-4 rounded-lg shadow-md hover:bg-green-600 transition-all disabled:bg-green-300 hidden">
+                    <span id="scan-btn-text"><i data-lucide="zap" class="inline-block mr-2 h-5 w-5"></i> สแกนตัวเลขจากภาพ</span>
+                    <span id="scan-btn-loading" class="hidden">
+                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        กำลังสแกน...
+                    </span>
+                </button>
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">เลขมิเตอร์ (หน่วย)</label>
+                    <input id="add-reading-value" type="number" class="w-full border-slate-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                </div>
+                <div class="flex justify-end gap-4 pt-4">
+                    <button type="button" class="btn-cancel bg-slate-200 text-slate-800 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors">ยกเลิก</button>
+                    <button type="submit" class="bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-colors">บันทึก</button>
+                </div>
+            </form>
         </div>
-      </form>
     </div>
-  </div>
-
-  <!-- Modal Add Reading -->
-  <div id="add-reading-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
-    <div class="bg-white p-6 rounded shadow w-full max-w-sm">
-      <h3 class="text-lg font-bold mb-3">จดมิเตอร์</h3>
-      <form id="add-reading-form" class="space-y-3">
-        <input id="add-reading-date" type="date" class="w-full border p-2" required>
-        <input id="add-reading-value" type="number" class="w-full border p-2" placeholder="เลขมิเตอร์" required>
-        <div class="flex justify-end gap-2">
-          <button type="button" onclick="closeModal(addReadingModal)" class="px-3 py-1 bg-gray-300 rounded">ยกเลิก</button>
-          <button class="px-3 py-1 bg-blue-600 text-white rounded">บันทึก</button>
+    <div id="edit-reading-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 hidden">
+        <div class="bg-white rounded-xl shadow-2xl p-6 md:p-8 w-full max-w-md animate-scale-up">
+            <h2 class="text-2xl font-bold mb-6 text-slate-800">แก้ไขข้อมูลการจดมิเตอร์</h2>
+            <div id="edit-reading-error" class="bg-red-100 text-red-700 p-3 rounded-lg mb-4 hidden"></div>
+            <form id="edit-reading-form" class="space-y-4">
+                <input type="hidden" id="edit-reading-id">
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">วันที่</label>
+                    <input id="edit-reading-date" type="date" class="w-full border-slate-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">เลขมิเตอร์ (หน่วย)</label>
+                    <input id="edit-reading-value" type="number" class="w-full border-slate-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                </div>
+                <div class="flex justify-end gap-4 pt-4">
+                    <button type="button" class="btn-cancel bg-slate-200 text-slate-800 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors">ยกเลิก</button>
+                    <button type="submit" class="bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-colors">บันทึกการแก้ไข</button>
+                </div>
+            </form>
         </div>
-      </form>
     </div>
-  </div>
+    <div id="confirm-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 hidden">
+        <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-sm animate-scale-up text-center">
+            <h3 id="confirm-modal-title" class="text-lg font-bold mb-4 text-slate-800">ยืนยันการกระทำ</h3>
+            <p id="confirm-modal-text" class="text-slate-600 mb-6"></p>
+            <div class="flex justify-center gap-4">
+                <button id="confirm-modal-cancel" class="bg-slate-200 text-slate-800 font-semibold py-2 px-6 rounded-lg hover:bg-slate-300 transition-colors">ยกเลิก</button>
+                <button id="confirm-modal-ok" class="bg-red-500 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-red-600 transition-colors">ยืนยัน</button>
+            </div>
+        </div>
+    </div>
+    <div id="image-preview-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 hidden">
+        <div class="relative bg-white p-4 rounded-xl shadow-2xl max-w-3xl max-h-[90vh] animate-scale-up">
+            <button id="close-preview-btn" class="absolute -top-3 -right-3 bg-white rounded-full p-1 text-slate-800 hover:bg-slate-200">
+                <i data-lucide="x" class="h-6 w-6"></i>
+            </button>
+            <img id="preview-image-element" src="" alt="Meter Reading Preview" class="max-w-full max-h-[85vh] object-contain">
+        </div>
+    </div>
 
-  <script>
-    // 👉 URL ของ Web App จาก Apps Script
-    const API_URL = "https://script.google.com/macros/s/AKfycbzoAmyK4zCsAqntP8iPde-ZlWTGoSoUB5inmLyOted2-dtwiFlS-doAcGpIwFXE5Rh_/exec";
+    <script>
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzoAmyK4zCsAqntP8iPde-ZlWTGoSoUB5inmLyOted2-dtwiFlS-doAcGpIwFXE5Rh_/exec'; // Replace with your Web App URL
+        
+        let currentUser = null;
+        let houses = [];
+        let selectedHouseId = null;
+        let usageChart = null;
 
-    let currentUser=null, houses=[], selectedHouseId=null, usageChart=null;
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const authView = document.getElementById('auth-view');
+        const appContent = document.getElementById('app-content');
+        const userInfo = document.getElementById('user-info');
+        const userEmail = document.getElementById('user-email');
+        const houseListView = document.getElementById('house-list-view');
+        const houseDetailView = document.getElementById('house-detail-view');
+        const houseListContainer = document.getElementById('house-list-container');
+        const noHousesMessage = document.getElementById('no-houses-message');
+        const imagePreviewModal = document.getElementById('image-preview-modal');
+        const previewImageElement = document.getElementById('preview-image-element');
 
-    // API call
-    async function callAPI(action, payload={}) {
-      console.log("callAPI ->", action, payload);
-      const res = await fetch(API_URL,{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({ action, ...payload })
-      });
-      const data = await res.json();
-      console.log("API response:", data);
-      return data;
-    }
-
-    // UI update
-    function updateUI(user){
-      document.getElementById("loading-indicator").classList.add("hidden");
-      if(user){
-        document.getElementById("auth-view").classList.add("hidden");
-        document.getElementById("app-content").classList.remove("hidden");
-        document.getElementById("user-info").classList.remove("hidden");
-        document.getElementById("user-email").textContent=user.email;
-        loadHouses();
-      }else{
-        document.getElementById("auth-view").classList.remove("hidden");
-        document.getElementById("app-content").classList.add("hidden");
-        document.getElementById("user-info").classList.add("hidden");
-      }
-    }
-
-    // Login
-    async function handleLogin(e){
-      e.preventDefault();
-      const email=document.getElementById("login-email").value.trim();
-      const password=document.getElementById("login-password").value.trim();
-      console.log("Sending login:", email, password);
-
-      const result=await callAPI("login",{email,password});
-      console.log("Login result:", result);
-
-      if(result.success){ currentUser={email}; updateUI(currentUser);}
-      else{ const err=document.getElementById("auth-error"); err.textContent="อีเมลหรือรหัสผ่านไม่ถูกต้อง"; err.classList.remove("hidden"); }
-    }
-
-    function handleLogout(){ currentUser=null; updateUI(null); }
-
-    // Houses
-    async function loadHouses(){
-      const result=await callAPI("getHouses",{email:currentUser.email});
-      houses=result||[];
-      const list=document.getElementById("house-list-container");
-      list.innerHTML="";
-      if(houses.length===0){document.getElementById("no-houses-message").classList.remove("hidden");}
-      else{
-        document.getElementById("no-houses-message").classList.add("hidden");
-        houses.forEach(h=>{
-          const card=document.createElement("div");
-          card.className="bg-white p-4 rounded shadow cursor-pointer";
-          card.innerHTML=`<h3 class="font-bold">${h.name}</h3>`;
-          card.onclick=()=>openHouse(h.id);
-          list.appendChild(card);
+        const toBase64 = file => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
         });
-      }
-    }
 
-    async function handleAddHouse(e){
-      e.preventDefault();
-      const name=document.getElementById("house-name-input").value.trim();
-      if(!name)return;
-      await callAPI("addHouse",{email:currentUser.email,houseName:name});
-      closeModal(addHouseModal); loadHouses();
-    }
+        async function postData(data) {
+            const formData = new FormData();
+            for (const key in data) {
+                formData.append(key, data[key]);
+            }
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: formData
+            });
+            return await response.json();
+        }
 
-    // Readings
-    async function openHouse(houseId){
-      selectedHouseId=houseId;
-      const readings=await callAPI("getReadings",{houseId});
-      const house=houses.find(h=>h.id===houseId);
-      house.readings=readings||[];
-      renderHouseDetail(house);
-    }
+        function showAuthError(message) {
+            const authError = document.getElementById('auth-error');
+            authError.textContent = message;
+            authError.classList.remove('hidden');
+        }
 
-    function renderHouseDetail(house){
-      document.getElementById("house-list-view").classList.add("hidden");
-      document.getElementById("house-detail-view").classList.remove("hidden");
-      document.getElementById("house-detail-name").textContent=house.name;
-      const tbody=document.getElementById("readings-table-body"); tbody.innerHTML="";
-      let prev=0; const sorted=[...house.readings].sort((a,b)=>new Date(a.date)-new Date(b.date)); const usageData=[];
-      sorted.forEach(r=>{
-        const usage=prev? r.value-prev:0; prev=r.value;
-        usageData.push({date:r.date,usage,value:r.value});
-        tbody.innerHTML+=`<tr><td class="p-2">${r.date}</td><td class="p-2">${r.value}</td><td class="p-2">${usage}</td></tr>`;
-      });
-      if(usageData.length>1){
-        document.getElementById("chart-section").classList.remove("hidden");
-        const ctx=document.getElementById("usage-chart"); if(usageChart)usageChart.destroy();
-        usageChart=new Chart(ctx,{type:"line",data:{labels:usageData.map(r=>r.date),datasets:[{label:"ปริมาณที่ใช้",data:usageData.map(r=>r.usage),borderColor:"#2563eb"}]}});
-      }
-    }
+        function updateUIForAuthState() {
+            const userToken = localStorage.getItem('userToken');
+            const userEmail = localStorage.getItem('userEmail');
+            if (userToken && userEmail) {
+                currentUser = { email: userEmail, token: userToken };
+                authView.classList.add('hidden');
+                appContent.classList.remove('hidden');
+                userInfo.classList.remove('hidden');
+                document.getElementById('user-email').textContent = userEmail;
+                fetchHouses();
+            } else {
+                currentUser = null;
+                authView.classList.remove('hidden');
+                appContent.classList.add('hidden');
+                userInfo.classList.add('hidden');
+                houseListContainer.innerHTML = '';
+            }
+            loadingIndicator.classList.add('hidden');
+        }
 
-    async function handleAddReading(e){
-      e.preventDefault();
-      const date=document.getElementById("add-reading-date").value;
-      const value=parseInt(document.getElementById("add-reading-value").value);
-      await callAPI("addReading",{houseId:selectedHouseId,date,value,imageUrl:""});
-      closeModal(addReadingModal); openHouse(selectedHouseId);
-    }
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            try {
+                const result = await postData({ action: 'login', email, password });
+                if (result.status === 'success') {
+                    localStorage.setItem('userEmail', result.email);
+                    localStorage.setItem('userToken', result.token);
+                    updateUIForAuthState();
+                } else {
+                    showAuthError(result.message);
+                }
+            } catch (error) {
+                console.error("Login failed:", error);
+                showAuthError("การเข้าสู่ระบบล้มเหลว โปรดลองอีกครั้ง");
+            }
+        }
 
-    // Modals
-    const addHouseModal=document.getElementById("add-house-modal");
-    const addReadingModal=document.getElementById("add-reading-modal");
-    function openModal(m){m.classList.remove("hidden");}
-    function closeModal(m){m.classList.add("hidden");}
+        function handleLogout() {
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('userToken');
+            updateUIForAuthState();
+        }
 
-    // Event bindings
-    document.getElementById("login-form").addEventListener("submit",handleLogin);
-    document.getElementById("logout-btn").addEventListener("click",handleLogout);
-    document.getElementById("add-house-btn").addEventListener("click",()=>openModal(addHouseModal));
-    document.getElementById("add-house-form").addEventListener("submit",handleAddHouse);
-    document.getElementById("back-to-list-btn").addEventListener("click",()=>{
-      document.getElementById("house-list-view").classList.remove("hidden");
-      document.getElementById("house-detail-view").classList.add("hidden");
-    });
-    document.getElementById("add-reading-btn").addEventListener("click",()=>{
-      document.getElementById("add-reading-date").value=new Date().toISOString().split("T")[0];
-      openModal(addReadingModal);
-    });
-    document.getElementById("add-reading-form").addEventListener("submit",handleAddReading);
+        async function fetchHouses() {
+            if (!currentUser) return;
+            try {
+                const result = await postData({ action: 'getHouses', email: currentUser.email, token: currentUser.token });
+                if (result.status === 'success') {
+                    houses = result.houses.map(house => ({
+                        ...house,
+                        readings: house.readings.sort((a, b) => new Date(a.date) - new Date(b.date))
+                    }));
+                    if (selectedHouseId && houses.some(h => h.id === selectedHouseId)) {
+                        renderHouseDetail();
+                    } else {
+                        renderHouseList();
+                    }
+                } else {
+                    console.error("Error fetching houses:", result.message);
+                }
+            } catch (error) {
+                console.error("Fetch houses failed:", error);
+            }
+        }
 
-    updateUI(null); lucide.createIcons();
-  </script>
+        function renderHouseList() {
+            houseListView.classList.remove('hidden');
+            houseDetailView.classList.add('hidden');
+            houseListContainer.innerHTML = '';
+            if (houses.length === 0) {
+                noHousesMessage.classList.remove('hidden');
+            } else {
+                noHousesMessage.classList.add('hidden');
+                houses.forEach(house => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-white p-6 rounded-xl shadow-lg cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300';
+                    card.innerHTML = `<h3 class="text-xl font-bold text-blue-700">${house.name}</h3><p class="text-slate-500 mt-2">${house.readings.length > 0 ? `บันทึกแล้ว ${house.readings.length} ครั้ง` : 'ยังไม่มีการบันทึก'}</p>`;
+                    card.addEventListener('click', () => { selectedHouseId = house.id; renderHouseDetail(); });
+                    houseListContainer.appendChild(card);
+                });
+            }
+            lucide.createIcons();
+        }
+
+        function renderHouseDetail() {
+            const house = houses.find(h => h.id === selectedHouseId);
+            if (!house) { selectedHouseId = null; renderHouseList(); return; }
+            houseListView.classList.add('hidden');
+            houseDetailView.classList.remove('hidden');
+            document.getElementById('house-detail-name').textContent = house.name;
+            const readingsTableBody = document.getElementById('readings-table-body');
+            const noReadingsMessage = document.getElementById('no-readings-message');
+            readingsTableBody.innerHTML = '';
+            const readingsWithUsage = house.readings.map((reading, index, arr) => {
+                const previousReading = index > 0 ? arr[index - 1].value : 0;
+                const usage = index > 0 ? reading.value - previousReading : 0;
+                return { ...reading, usage: usage < 0 ? 0 : usage };
+            }).reverse();
+
+            if (readingsWithUsage.length === 0) {
+                noReadingsMessage.classList.remove('hidden');
+            } else {
+                noReadingsMessage.classList.add('hidden');
+                readingsWithUsage.forEach(reading => {
+                    const row = readingsTableBody.insertRow();
+                    row.className = 'border-b border-slate-100';
+                    row.innerHTML = `
+                        <td class="p-3">${reading.date}</td>
+                        <td class="p-3 font-medium">${reading.value}</td>
+                        <td class="p-3 text-blue-600 font-semibold">${reading.usage > 0 ? `+${reading.usage}` : '-'}</td>
+                        <td class="p-3">
+                            ${reading.imageUrl ? `<button class="preview-image-btn text-blue-500 hover:text-blue-700" data-image-url="${reading.imageUrl}"><i data-lucide="camera" class="h-5 w-5"></i></button>` : ''}
+                        </td>
+                        <td class="p-3 flex gap-2">
+                           <button class="edit-reading-btn text-blue-500 hover:text-blue-700" data-reading-id="${reading.id}"><i data-lucide="pencil" class="h-5 w-5"></i></button>
+                           <button class="delete-reading-btn text-red-500 hover:text-red-700" data-reading-id="${reading.id}"><i data-lucide="trash-2" class="h-5 w-5"></i></button>
+                        </td>
+                    `;
+                });
+            }
+            renderChart(readingsWithUsage.reverse());
+            lucide.createIcons();
+        }
+
+        function renderChart(readings) {
+            const chartSection = document.getElementById('chart-section');
+            const ctx = document.getElementById('usage-chart').getContext('2d');
+            if (readings.length < 2) { chartSection.classList.add('hidden'); return; }
+            chartSection.classList.remove('hidden');
+            if (usageChart) { usageChart.destroy(); }
+            usageChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: readings.map(r => r.date),
+                    datasets: [{ label: 'ปริมาณที่ใช้ (หน่วย)', data: readings.map(r => r.usage), borderColor: '#1d4ed8', backgroundColor: 'rgba(29, 78, 216, 0.1)', fill: true, tension: 0.3 }, { label: 'เลขมิเตอร์', data: readings.map(r => r.value), borderColor: '#34d399', backgroundColor: 'rgba(52, 211, 153, 0.1)', tension: 0.3 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: false } } }
+            });
+        }
+
+        const addHouseModal = document.getElementById('add-house-modal');
+        const addReadingModal = document.getElementById('add-reading-modal');
+        const editReadingModal = document.getElementById('edit-reading-modal');
+        const confirmModal = document.getElementById('confirm-modal');
+        const imagePreviewModal = document.getElementById('image-preview-modal');
+
+        function openModal(modal) { modal.classList.remove('hidden'); }
+        function closeModal(modal) { modal.classList.add('hidden'); }
+
+        function showConfirm(text, onConfirm) {
+            const confirmModalText = document.getElementById('confirm-modal-text');
+            const confirmOkBtn = document.getElementById('confirm-modal-ok');
+            const confirmCancelBtn = document.getElementById('confirm-modal-cancel');
+
+            confirmModalText.textContent = text;
+            confirmModal.classList.remove('hidden');
+            const newOkBtn = confirmOkBtn.cloneNode(true);
+            confirmOkBtn.parentNode.replaceChild(newOkBtn, confirmOkBtn);
+            newOkBtn.addEventListener('click', () => {
+                onConfirm();
+                closeModal(confirmModal);
+            });
+            confirmCancelBtn.onclick = () => closeModal(confirmModal);
+        }
+
+        function setupEventListeners() {
+            document.getElementById('login-form').addEventListener('submit', handleLogin);
+            document.getElementById('logout-btn').addEventListener('click', handleLogout);
+            document.getElementById('add-house-btn').addEventListener('click', () => openModal(addHouseModal));
+            document.getElementById('back-to-list-btn').addEventListener('click', () => { selectedHouseId = null; renderHouseList(); });
+            document.getElementById('add-reading-btn').addEventListener('click', () => {
+                const form = document.getElementById('add-reading-form');
+                form.reset();
+                document.getElementById('add-image-preview').classList.add('hidden');
+                document.getElementById('scan-image-btn').classList.add('hidden');
+                document.getElementById('add-reading-error').classList.add('hidden');
+                document.getElementById('add-reading-date').value = new Date().toISOString().split('T')[0];
+                const house = houses.find(h => h.id === selectedHouseId);
+                const readings = house?.readings || [];
+                const lastReading = readings.length > 0 ? readings[readings.length - 1].value : 0;
+                document.getElementById('add-reading-value').placeholder = `ครั้งล่าสุด: ${lastReading}`;
+                openModal(addReadingModal);
+            });
+            document.getElementById('delete-house-btn').addEventListener('click', handleDeleteHouse);
+            document.getElementById('add-house-form').addEventListener('submit', handleAddHouse);
+            document.getElementById('add-reading-form').addEventListener('submit', handleAddReading);
+            document.getElementById('edit-reading-form').addEventListener('submit', handleEditReadingSave);
+            document.querySelectorAll('.btn-cancel').forEach(btn => btn.addEventListener('click', () => {
+                closeModal(addHouseModal);
+                closeModal(addReadingModal);
+                closeModal(editReadingModal);
+            }));
+            document.getElementById('add-image-btn').addEventListener('click', () => document.getElementById('add-image-upload').click());
+            document.getElementById('add-image-upload').addEventListener('change', handleImageChange);
+            document.getElementById('scan-image-btn').addEventListener('click', handleScanImage);
+            document.getElementById('readings-table-body').addEventListener('click', (e) => {
+                const editBtn = e.target.closest('.edit-reading-btn');
+                const deleteBtn = e.target.closest('.delete-reading-btn');
+                const previewBtn = e.target.closest('.preview-image-btn');
+                if (editBtn) {
+                    const readingId = editBtn.dataset.readingId;
+                    handleEditReadingOpen(readingId);
+                }
+                if (deleteBtn) {
+                    const readingId = deleteBtn.dataset.readingId;
+                    handleDeleteReading(readingId);
+                }
+                if (previewBtn) {
+                    const imageUrl = previewBtn.dataset.imageUrl;
+                    openImagePreview(imageUrl);
+                }
+            });
+            document.getElementById('close-preview-btn').addEventListener('click', () => closeModal(imagePreviewModal));
+            imagePreviewModal.addEventListener('click', (e) => {
+                if (e.target === imagePreviewModal) {
+                    closeModal(imagePreviewModal);
+                }
+            });
+        }
+
+        async function handleAddHouse(e) {
+            e.preventDefault();
+            const input = document.getElementById('house-name-input');
+            const houseName = input.value.trim();
+            if (houseName && currentUser) {
+                try {
+                    const result = await postData({ action: 'addHouse', email: currentUser.email, token: currentUser.token, name: houseName });
+                    if (result.status === 'success') {
+                        input.value = '';
+                        closeModal(addHouseModal);
+                        fetchHouses();
+                    } else {
+                        console.error("Error adding house:", result.message);
+                    }
+                } catch (error) { console.error("Error adding house: ", error); }
+            }
+        }
+
+        async function handleDeleteHouse() {
+            showConfirm('คุณแน่ใจหรือไม่ว่าต้องการลบบ้านหลังนี้พร้อมข้อมูลทั้งหมด?', async () => {
+                try {
+                    const result = await postData({ action: 'deleteHouse', email: currentUser.email, token: currentUser.token, houseId: selectedHouseId });
+                    if (result.status === 'success') {
+                        selectedHouseId = null;
+                        fetchHouses();
+                    } else {
+                        console.error("Error deleting house:", result.message);
+                    }
+                } catch (error) { console.error("Error deleting house: ", error); }
+            });
+        }
+
+        async function handleAddReading(e) {
+            e.preventDefault();
+            const date = document.getElementById('add-reading-date').value;
+            const value = document.getElementById('add-reading-value').value;
+            const fileInput = document.getElementById('add-image-upload');
+            const imageFile = fileInput.files[0];
+            const errorMessage = document.getElementById('add-reading-error');
+            const numericValue = parseInt(value);
+            
+            if (!date || isNaN(numericValue)) { errorMessage.textContent = 'กรุณากรอกข้อมูลให้ครบถ้วน'; errorMessage.classList.remove('hidden'); return; }
+            
+            const house = houses.find(h => h.id === selectedHouseId);
+            const readings = house?.readings || [];
+            const lastReadingValue = readings.length > 0 ? readings[readings.length - 1].value : 0;
+            if (numericValue < lastReadingValue) { errorMessage.textContent = `เลขมิเตอร์ต้องไม่น้อยกว่าครั้งล่าสุด (${lastReadingValue})`; errorMessage.classList.remove('hidden'); return; }
+
+            const data = {
+                action: 'addReading',
+                email: currentUser.email,
+                token: currentUser.token,
+                houseId: selectedHouseId,
+                date,
+                value
+            };
+
+            if (imageFile) {
+                const base64Data = await toBase64(imageFile);
+                data.imageFile = base64Data;
+            }
+
+            try {
+                const result = await postData(data);
+                if (result.status === 'success') {
+                    closeModal(addReadingModal);
+                    fetchHouses();
+                } else {
+                    errorMessage.textContent = 'เกิดข้อผิดพลาดในการบันทึกข้อมูล';
+                    errorMessage.classList.remove('hidden');
+                }
+            } catch (error) { 
+                console.error("Error adding reading: ", error); 
+                errorMessage.textContent = 'เกิดข้อผิดพลาดในการบันทึกข้อมูล'; 
+                errorMessage.classList.remove('hidden');
+            }
+        }
+
+        function handleImageChange(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const preview = document.getElementById('add-image-preview');
+                preview.src = URL.createObjectURL(file);
+                preview.classList.remove('hidden');
+                document.getElementById('scan-image-btn').classList.remove('hidden');
+                document.getElementById('add-image-text').textContent = 'เปลี่ยนรูปภาพ';
+            }
+        }
+
+        async function handleScanImage() {
+            const fileInput = document.getElementById('add-image-upload');
+            const imageFile = fileInput.files[0];
+            const errorMessage = document.getElementById('add-reading-error');
+            const scanBtnText = document.getElementById('scan-btn-text');
+            const scanBtnLoading = document.getElementById('scan-btn-loading');
+            const scanBtn = document.getElementById('scan-image-btn');
+            
+            if (!imageFile) { errorMessage.textContent = 'กรุณาเลือกรูปภาพก่อน'; errorMessage.classList.remove('hidden'); return; }
+            
+            scanBtn.disabled = true;
+            scanBtnText.classList.add('hidden');
+            scanBtnLoading.classList.remove('hidden');
+            errorMessage.classList.add('hidden');
+
+            try {
+                const base64Data = (await toBase64(imageFile)).split(',')[1];
+                const result = await postData({ action: 'scanImage', base64Data });
+                if (result.status === 'success' && !isNaN(parseInt(result.value))) {
+                    document.getElementById('add-reading-value').value = result.value;
+                } else {
+                    errorMessage.textContent = 'ไม่สามารถดึงตัวเลขจากรูปได้ กรุณากรอกด้วยตนเอง';
+                    errorMessage.classList.remove('hidden');
+                }
+            } catch (err) {
+                console.error("OCR Error:", err);
+                errorMessage.textContent = 'เกิดข้อผิดพลาดในการสแกนรูปภาพ';
+                errorMessage.classList.remove('hidden');
+            } finally {
+                scanBtn.disabled = false;
+                scanBtnText.classList.remove('hidden');
+                scanBtnLoading.classList.add('hidden');
+            }
+        }
+
+        function handleEditReadingOpen(readingId) {
+            const house = houses.find(h => h.id === selectedHouseId);
+            const reading = house?.readings.find(r => r.id === readingId);
+            if (reading) {
+                document.getElementById('edit-reading-id').value = reading.id;
+                document.getElementById('edit-reading-date').value = reading.date;
+                document.getElementById('edit-reading-value').value = reading.value;
+                document.getElementById('edit-reading-error').classList.add('hidden');
+                openModal(editReadingModal);
+            }
+        }
+
+        async function handleEditReadingSave(e) {
+            e.preventDefault();
+            const readingId = document.getElementById('edit-reading-id').value;
+            const newDate = document.getElementById('edit-reading-date').value;
+            const newValue = document.getElementById('edit-reading-value').value;
+            const errorMessage = document.getElementById('edit-reading-error');
+            const numericValue = parseInt(newValue);
+            
+            if (!newDate || isNaN(numericValue)) {
+                errorMessage.textContent = 'กรุณากรอกข้อมูลให้ครบถ้วน';
+                errorMessage.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                const result = await postData({ 
+                    action: 'editReading', 
+                    email: currentUser.email, 
+                    token: currentUser.token, 
+                    houseId: selectedHouseId, 
+                    readingId, 
+                    date: newDate, 
+                    value: newValue 
+                });
+                if (result.status === 'success') {
+                    closeModal(editReadingModal);
+                    fetchHouses();
+                } else {
+                    errorMessage.textContent = 'เกิดข้อผิดพลาดในการบันทึกการแก้ไข';
+                    errorMessage.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error("Error updating reading:", error);
+                errorMessage.textContent = 'เกิดข้อผิดพลาดในการบันทึกการแก้ไข';
+                errorMessage.classList.remove('hidden');
+            }
+        }
+
+        function handleDeleteReading(readingId) {
+            showConfirm('คุณต้องการลบรายการบันทึกนี้ใช่หรือไม่?', async () => {
+                try {
+                    const result = await postData({ action: 'deleteReading', email: currentUser.email, token: currentUser.token, houseId: selectedHouseId, readingId });
+                    if (result.status === 'success') {
+                        fetchHouses();
+                    } else {
+                        console.error("Error deleting reading:", result.message);
+                    }
+                } catch (error) {
+                    console.error("Error deleting reading:", error);
+                }
+            });
+        }
+        
+        function openImagePreview(imageUrl) {
+            if (imageUrl) {
+                previewImageElement.src = imageUrl;
+                openModal(imagePreviewModal);
+            }
+        }
+        
+        function main() {
+            lucide.createIcons();
+            setupEventListeners();
+            updateUIForAuthState();
+        }
+        
+        main();
+    </script>
 </body>
 </html>
