@@ -3,29 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Water Meter Logger</title>
+    <title>Login - Water Meter Logger</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display.swap');
         body {
             font-family: 'Kanit', sans-serif;
-            transition: background-color 0.3s, color 0.3s;
         }
-        .view { display: none; }
-        .active-view { display: block; }
-        .chart-container {
-            position: relative;
-            height: 40vh;
-            width: 100%;
-        }
-        /* Custom scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px;}
-        ::-webkit-scrollbar-thumb:hover { background: #555; }
-
         .loader {
             border: 5px solid #f3f3f3;
             border-top: 5px solid #3498db;
@@ -34,12 +18,10 @@
             height: 50px;
             animation: spin 1s linear infinite;
         }
-
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        
         .auth-tab {
             cursor: pointer;
             padding: 0.75rem 1rem;
@@ -50,212 +32,50 @@
             color: #2563eb; /* text-blue-600 */
             border-bottom-color: #2563eb; /* border-blue-600 */
         }
-        .auth-content {
-            display: none;
-        }
-        .auth-content.active {
-            display: block;
-        }
+        .auth-content { display: none; }
+        .auth-content.active { display: block; }
     </style>
 </head>
 <body class="bg-sky-50 text-gray-800">
 
-    <!-- Containerหลัก -->
-    <div id="app" class="max-w-7xl mx-auto">
-
-        <!-- Auth View -->
-        <div id="auth-view" class="view min-h-screen flex items-center justify-center bg-blue-50">
-            <div class="w-full max-w-md bg-white rounded-xl shadow-lg overflow-hidden">
-                <div class="flex border-b">
-                    <div id="login-tab-btn" class="auth-tab active flex-1 text-center font-semibold">เข้าสู่ระบบ</div>
-                    <div id="register-tab-btn" class="auth-tab flex-1 text-center font-semibold">สมัครสมาชิก</div>
-                </div>
-                <div class="p-8">
-                    <!-- Login Form -->
-                    <div id="login-content" class="auth-content active">
-                        <h2 class="text-3xl font-bold text-center text-blue-600 mb-6">ยินดีต้อนรับ</h2>
-                        <form id="login-form">
-                            <div class="mb-4">
-                                <label for="username" class="block text-gray-700 mb-2">ชื่อผู้ใช้</label>
-                                <input type="text" id="username" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                            </div>
-                            <div class="mb-6">
-                                <label for="password" class="block text-gray-700 mb-2">รหัสผ่าน</label>
-                                <input type="password" id="password" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                            </div>
-                            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-300">เข้าสู่ระบบ</button>
-                        </form>
-                    </div>
-                    <!-- Register Form -->
-                    <div id="register-content" class="auth-content">
-                        <h2 class="text-3xl font-bold text-center text-blue-600 mb-6">สร้างบัญชีใหม่</h2>
-                        <form id="register-form">
-                            <div class="mb-4">
-                                <label for="reg-username" class="block text-gray-700 mb-2">ชื่อผู้ใช้</label>
-                                <input type="text" id="reg-username" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                            </div>
-                            <div class="mb-4">
-                                <label for="reg-password" class="block text-gray-700 mb-2">รหัสผ่าน</label>
-                                <input type="password" id="reg-password" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                            </div>
-                            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-300">สมัครสมาชิก</button>
-                        </form>
-                    </div>
-                </div>
+    <!-- Auth View -->
+    <div id="auth-view" class="min-h-screen flex items-center justify-center bg-blue-50">
+        <div class="w-full max-w-md bg-white rounded-xl shadow-lg overflow-hidden">
+            <div class="flex border-b">
+                <div id="login-tab-btn" class="auth-tab active flex-1 text-center font-semibold">เข้าสู่ระบบ</div>
+                <div id="register-tab-btn" class="auth-tab flex-1 text-center font-semibold">สมัครสมาชิก</div>
             </div>
-        </div>
-
-        <!-- Main App View -->
-        <div id="main-app-view" class="view">
-            <header class="bg-blue-600 text-white shadow-md">
-                <div class="container mx-auto px-4 py-3 flex justify-between items-center">
-                    <h1 class="text-2xl font-bold">Water Meter Logger</h1>
-                    <div>
-                        <span id="user-display" class="mr-4"></span>
-                        <button id="logout-btn" class="bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-100 transition">ออกจากระบบ</button>
-                    </div>
-                </div>
-                <nav class="bg-blue-700">
-                    <div class="container mx-auto px-4">
-                        <div class="flex space-x-4">
-                           <button data-view="dashboard" class="nav-btn py-3 px-4 text-white font-semibold border-b-4 border-blue-700 hover:border-white">หน้าหลัก</button>
-                           <button data-view="monitor" class="nav-btn py-3 px-4 text-white font-semibold border-b-4 border-blue-700 hover:border-white">Monitor</button>
+            <div class="p-8">
+                <!-- Login Form -->
+                <div id="login-content" class="auth-content active">
+                    <h2 class="text-3xl font-bold text-center text-blue-600 mb-6">ยินดีต้อนรับ</h2>
+                    <form id="login-form">
+                        <div class="mb-4">
+                            <label for="username" class="block text-gray-700 mb-2">ชื่อผู้ใช้</label>
+                            <input type="text" id="username" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
                         </div>
-                    </div>
-                </nav>
-            </header>
-            
-            <main id="app-content" class="p-4 md:p-6">
-                <!-- Dashboard Content -->
-                <div id="dashboard-content" class="app-page">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-3xl font-bold text-gray-700">บ้านของคุณ</h2>
-                        <button id="add-house-btn" class="bg-blue-600 text-white px-5 py-2 rounded-lg shadow hover:bg-blue-700 transition flex items-center"><i class="fas fa-plus mr-2"></i>เพิ่มบ้าน</button>
-                    </div>
-                    <div id="house-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <!-- House cards will be injected here -->
-                    </div>
-                </div>
-
-                <!-- Monitor Content -->
-                <div id="monitor-content" class="app-page hidden">
-                     <h2 class="text-3xl font-bold text-gray-700 mb-6">ภาพรวมการใช้น้ำ</h2>
-                     <div id="all-houses-summary" class="bg-white p-6 rounded-lg shadow-md mb-6">
-                        <!-- Summary cards will be injected here -->
-                     </div>
-                     <div class="bg-white p-6 rounded-lg shadow-md">
-                        <h3 class="text-2xl font-semibold mb-4 text-gray-700">Chatbot วิเคราะห์ข้อมูล</h3>
-                        <div id="chatbot-container" class="border rounded-lg p-4 h-96 flex flex-col">
-                            <div id="chat-window" class="flex-1 overflow-y-auto mb-4 pr-2">
-                                <!-- Chat messages -->
-                                <div class="p-3 rounded-lg bg-blue-100 text-blue-800 self-start max-w-xs">สวัสดี! ถามฉันเกี่ยวกับข้อมูลการใช้น้ำได้เลย เช่น 'บ้านไหนใช้น้ำเยอะที่สุด?'</div>
-                            </div>
-                            <form id="chatbot-form" class="flex items-center">
-                                <input type="text" id="chat-input" class="flex-1 px-4 py-2 border rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="พิมพ์คำถามของคุณที่นี่...">
-                                <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-r-lg hover:bg-blue-700 transition"><i class="fas fa-paper-plane"></i></button>
-                            </form>
+                        <div class="mb-6">
+                            <label for="password" class="block text-gray-700 mb-2">รหัสผ่าน</label>
+                            <input type="password" id="password" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
                         </div>
-                     </div>
+                        <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-300">เข้าสู่ระบบ</button>
+                    </form>
                 </div>
-            </main>
-        </div>
-
-    </div>
-
-    <!-- Modals -->
-    <!-- Add House Modal -->
-    <div id="add-house-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
-        <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
-            <h3 class="text-2xl font-bold mb-4">เพิ่มบ้านใหม่</h3>
-            <form id="add-house-form">
-                <div class="mb-4">
-                    <label for="house-name" class="block mb-2">ชื่อบ้าน / ที่อยู่</label>
-                    <input type="text" id="house-name" class="w-full p-2 border rounded" required>
-                </div>
-                <div class="flex justify-end gap-4 mt-6">
-                    <button type="button" id="cancel-add-house" class="bg-gray-300 px-4 py-2 rounded">ยกเลิก</button>
-                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">บันทึก</button>
-                </div>
-            </form>
-        </div>
-    </div>
-    
-    <!-- Add Reading Modal -->
-    <div id="add-reading-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
-        <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-lg">
-            <h3 class="text-2xl font-bold mb-4">บันทึกการใช้น้ำสำหรับ <span id="reading-house-name" class="text-blue-600"></span></h3>
-            <form id="add-reading-form">
-                <input type="hidden" id="reading-house-id">
-                <div class="bg-blue-50 p-3 rounded-lg mb-4">
-                    <p>เลขมิเตอร์ครั้งล่าสุด: <strong id="last-reading-display" class="text-lg">N/A</strong></p>
-                    <p>บันทึกเมื่อ: <strong id="last-reading-date-display">N/A</strong></p>
-                </div>
-
-                <div class="mb-4">
-                    <label class="block mb-2 font-semibold">เลขมิเตอร์ปัจจุบัน</label>
-                    <div class="flex items-center gap-2">
-                        <input type="number" step="1" id="meter-reading" class="w-full p-2 border rounded" placeholder="กรอกตัวเลข" required>
-                        <span class="text-gray-500">หรือ</span>
-                         <label class="bg-gray-200 px-4 py-2 rounded-lg cursor-pointer hover:bg-gray-300">
-                            <i class="fas fa-camera mr-2"></i> อัปโหลดรูป
-                            <input type="file" id="meter-image" class="hidden" accept="image/*">
-                         </label>
-                    </div>
-                </div>
-
-                <div id="image-preview-container" class="mb-4 hidden text-center">
-                    <img id="image-preview" src="#" alt="ตัวอย่างรูปมิเตอร์" class="max-h-48 mx-auto rounded-lg mb-2"/>
-                    <p id="ocr-status" class="text-gray-600"></p>
-                </div>
-                
-                <div class="flex justify-end gap-4 mt-6">
-                    <button type="button" id="cancel-add-reading" class="bg-gray-300 px-4 py-2 rounded">ยกเลิก</button>
-                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">บันทึก</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- House Detail Modal -->
-    <div id="house-detail-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
-        <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-2xl font-bold text-blue-700" id="detail-house-name"></h3>
-                <button id="close-detail-modal" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
-            </div>
-            <div class="overflow-y-auto pr-4 flex-1">
-                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <h4 class="text-xl font-semibold mb-2">กราฟเลขมิเตอร์ (หน่วย)</h4>
-                        <div class="chart-container">
-                            <canvas id="reading-chart"></canvas>
+                <!-- Register Form -->
+                <div id="register-content" class="auth-content">
+                    <h2 class="text-3xl font-bold text-center text-blue-600 mb-6">สร้างบัญชีใหม่</h2>
+                    <form id="register-form">
+                        <div class="mb-4">
+                            <label for="reg-username" class="block text-gray-700 mb-2">ชื่อผู้ใช้</label>
+                            <input type="text" id="reg-username" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
                         </div>
-                    </div>
-                    <div>
-                        <h4 class="text-xl font-semibold mb-2">กราฟปริมาณการใช้น้ำ (หน่วย)</h4>
-                        <div class="chart-container">
-                            <canvas id="usage-chart"></canvas>
+                        <div class="mb-4">
+                            <label for="reg-password" class="block text-gray-700 mb-2">รหัสผ่าน</label>
+                            <input type="password" id="reg-password" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
                         </div>
-                    </div>
-                 </div>
-                 <div class="mt-6">
-                    <h4 class="text-xl font-semibold mb-2">ประวัติการบันทึก</h4>
-                    <div class="max-h-64 overflow-y-auto border rounded-lg">
-                        <table class="w-full text-sm text-left text-gray-500">
-                            <thead class="text-xs text-gray-700 uppercase bg-gray-50 sticky top-0">
-                                <tr>
-                                    <th scope="col" class="px-6 py-3">วันที่</th>
-                                    <th scope="col" class="px-6 py-3">เลขมิเตอร์</th>
-                                    <th scope="col" class="px-6 py-3">การใช้งาน</th>
-                                    <th scope="col" class="px-6 py-3">รูปภาพ</th>
-                                </tr>
-                            </thead>
-                            <tbody id="history-table-body">
-                                <!-- History rows will be injected here -->
-                            </tbody>
-                        </table>
-                    </div>
-                 </div>
+                        <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-300">สมัครสมาชิก</button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
@@ -268,65 +88,34 @@
         </div>
     </div>
 
-
     <script type="module">
-        // --- CONFIGURATION ---
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx2SSMQGcUOVr4TjNS5gVPKaM0wk9Xa8MC6IC50Y6mvYnGL5zgFsMDy_S6MqLyharOi/exec';
-        // ข้อมูล Google Drive และ Sheet ไม่จำเป็นต้องใช้ใน Front-end โดยตรง เพราะจัดการผ่าน Apps Script
-        const GEMINI_API_KEY = 'AIzaSyB5uy029b5FBGO7jtLdCE5RE-RbinKUmK4';
-        const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`;
-        
-        // --- STATE MANAGEMENT ---
-        let state = {
-            currentUser: null,
-            houses: [],
-            currentView: 'auth', // auth, main
-            currentAppPage: 'dashboard', // dashboard, monitor
-            allReadings: [],
-            charts: {
-                readingChart: null,
-                usageChart: null,
-            }
-        };
 
-        // --- DOM ELEMENTS ---
-        const views = {
-            auth: document.getElementById('auth-view'),
-            main: document.getElementById('main-app-view'),
-        };
-        const appPages = {
-            dashboard: document.getElementById('dashboard-content'),
-            monitor: document.getElementById('monitor-content'),
-        }
-        const userDisplay = document.getElementById('user-display');
-        const houseList = document.getElementById('house-list');
-        const allHousesSummary = document.getElementById('all-houses-summary');
-
-        // Modals
-        const addHouseModal = document.getElementById('add-house-modal');
-        const addReadingModal = document.getElementById('add-reading-modal');
-        const houseDetailModal = document.getElementById('house-detail-modal');
         const loadingModal = document.getElementById('loading-modal');
         const loadingText = document.getElementById('loading-text');
+
+        function showLoading(text = 'กำลังโหลด...') {
+            loadingText.textContent = text;
+            loadingModal.classList.remove('hidden');
+        }
         
-        // --- API HELPERS ---
+        function hideLoading() {
+            loadingModal.classList.add('hidden');
+        }
+
         async function apiCall(action, payload = {}) {
             showLoading();
             try {
                 const response = await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
-                    body: JSON.stringify({ action, ...payload, user: state.currentUser }),
-                    // By removing the Content-Type header, we let the browser send it as text/plain,
-                    // which helps avoid a CORS preflight request that can fail with Google Apps Script.
+                    body: JSON.stringify({ action, ...payload }),
                 });
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                
                 const result = await response.json();
-                if (result.status === 'error') {
-                    throw new Error(result.message);
-                }
+                if (result.status === 'error') throw new Error(result.message);
+                
                 return result;
             } catch (error) {
                 console.error('API Call Error:', error);
@@ -336,207 +125,7 @@
                 hideLoading();
             }
         }
-        
-        async function geminiApiCall(payload) {
-             showLoading("AI กำลังวิเคราะห์...");
-             try {
-                const response = await fetch(GEMINI_API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(payload)
-                });
-                if (!response.ok) {
-                    throw new Error(`Gemini API error! status: ${response.status}`);
-                }
-                const data = await response.json();
-                return data.candidates[0].content.parts[0].text;
-             } catch(error) {
-                 console.error("Gemini API Error:", error);
-                 alert("เกิดข้อผิดพลาดในการเรียกใช้ Gemini AI");
-                 return null;
-             } finally {
-                hideLoading();
-             }
-        }
 
-
-        // --- UI RENDERING ---
-        function updateView() {
-            Object.values(views).forEach(v => v.classList.remove('active-view'));
-            if (views[state.currentView]) {
-                views[state.currentView].classList.add('active-view');
-            }
-            if (state.currentView === 'main') {
-                updateAppPage();
-            }
-        }
-
-        function updateAppPage() {
-            Object.values(appPages).forEach(p => p.classList.add('hidden'));
-            if (appPages[state.currentAppPage]) {
-                appPages[state.currentAppPage].classList.remove('hidden');
-                document.querySelectorAll('.nav-btn').forEach(btn => {
-                    if (btn.dataset.view === state.currentAppPage) {
-                        btn.classList.add('border-white');
-                        btn.classList.remove('border-blue-700');
-                    } else {
-                        btn.classList.remove('border-white');
-                        btn.classList.add('border-blue-700');
-                    }
-                });
-            }
-        }
-
-        function renderHouses() {
-            houseList.innerHTML = '';
-            if (state.houses.length === 0) {
-                houseList.innerHTML = '<p class="text-gray-500 col-span-full text-center">ยังไม่มีบ้านที่บันทึกไว้ คลิก "เพิ่มบ้าน" เพื่อเริ่มต้น</p>';
-                return;
-            }
-            state.houses.forEach(house => {
-                const lastReading = house.lastReading != null ? house.lastReading : 'ยังไม่มีข้อมูล';
-                const lastUsage = house.lastUsage != null ? house.lastUsage : 'N/A';
-                const card = document.createElement('div');
-                card.className = 'bg-white p-5 rounded-lg shadow-md hover:shadow-xl transition-shadow cursor-pointer';
-                card.innerHTML = `
-                    <div class="flex justify-between items-start">
-                        <h3 class="text-xl font-bold text-gray-800">${house.name}</h3>
-                        <div class="flex gap-2">
-                            <button data-house-id="${house.id}" class="view-details-btn text-gray-400 hover:text-blue-600"><i class="fas fa-chart-line"></i></button>
-                            <button data-house-id="${house.id}" class="delete-house-btn text-gray-400 hover:text-red-600"><i class="fas fa-trash"></i></button>
-                        </div>
-                    </div>
-                    <div class="mt-4 space-y-2">
-                        <p class="text-sm text-gray-500">เลขมิเตอร์ล่าสุด: <span class="font-semibold text-gray-700 text-lg">${lastReading}</span></p>
-                        <p class="text-sm text-gray-500">การใช้งานล่าสุด: <span class="font-semibold text-green-600 text-lg">${lastUsage}</span> หน่วย</p>
-                    </div>
-                    <button data-house-id="${house.id}" class="add-reading-btn w-full mt-4 bg-blue-100 text-blue-700 font-semibold py-2 rounded-lg hover:bg-blue-200 transition">
-                        <i class="fas fa-plus-circle mr-2"></i>บันทึกการใช้งาน
-                    </button>
-                `;
-                houseList.appendChild(card);
-            });
-        }
-        
-        function renderMonitorView() {
-            allHousesSummary.innerHTML = '';
-            if (state.houses.length === 0) {
-                allHousesSummary.innerHTML = '<p class="text-gray-500 text-center">ยังไม่มีข้อมูลบ้าน</p>';
-                return;
-            }
-            
-            const summaryGrid = document.createElement('div');
-            summaryGrid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4';
-
-            let totalUsage = 0;
-            let houseWithMostUsage = { name: 'N/A', usage: 0 };
-
-            state.houses.forEach(house => {
-                const usage = parseFloat(house.totalUsage) || 0;
-                totalUsage += usage;
-                if (usage > houseWithMostUsage.usage) {
-                    houseWithMostUsage = { name: house.name, usage: usage };
-                }
-
-                const card = document.createElement('div');
-                card.className = 'bg-gray-50 p-4 rounded-lg border';
-                card.innerHTML = `
-                    <p class="text-sm text-gray-500">${house.name}</p>
-                    <p class="text-2xl font-bold text-blue-600">${usage.toFixed(2)}</p>
-                    <p class="text-xs text-gray-400">หน่วย (รวม)</p>
-                `;
-                summaryGrid.appendChild(card);
-            });
-
-            allHousesSummary.appendChild(summaryGrid);
-
-            // Overall Summary
-            const overallContainer = document.createElement('div');
-            overallContainer.className = 'mt-6 pt-4 border-t grid grid-cols-1 md:grid-cols-3 gap-4';
-            overallContainer.innerHTML = `
-                <div class="bg-blue-50 p-4 rounded-lg text-center">
-                    <p class="text-sm text-blue-800">บ้านทั้งหมด</p>
-                    <p class="text-3xl font-bold text-blue-900">${state.houses.length}</p>
-                </div>
-                <div class="bg-green-50 p-4 rounded-lg text-center">
-                    <p class="text-sm text-green-800">การใช้งานรวมทั้งหมด</p>
-                    <p class="text-3xl font-bold text-green-900">${totalUsage.toFixed(2)}</p>
-                    <p class="text-xs text-gray-500">หน่วย</p>
-                </div>
-                <div class="bg-yellow-50 p-4 rounded-lg text-center">
-                    <p class="text-sm text-yellow-800">ใช้งานสูงสุด</p>
-                    <p class="text-xl font-bold text-yellow-900">${houseWithMostUsage.name}</p>
-                    <p class="text-xs text-gray-500">(${houseWithMostUsage.usage.toFixed(2)} หน่วย)</p>
-                </div>
-            `;
-            allHousesSummary.prepend(overallContainer);
-
-        }
-
-        function renderHouseDetails(houseId) {
-            const house = state.houses.find(h => h.id === houseId);
-            const readings = state.allReadings.filter(r => r.houseId === houseId)
-                                .sort((a, b) => new Date(a.date) - new Date(b.date));
-            
-            document.getElementById('detail-house-name').textContent = house.name;
-            
-            // Render table
-            const tableBody = document.getElementById('history-table-body');
-            tableBody.innerHTML = '';
-            readings.forEach(r => {
-                const row = document.createElement('tr');
-                row.className = 'bg-white border-b';
-                row.innerHTML = `
-                    <td class="px-6 py-4">${new Date(r.date).toLocaleString('th-TH')}</td>
-                    <td class="px-6 py-4 font-medium text-gray-900">${r.reading}</td>
-                    <td class="px-6 py-4 text-green-600">${r.usage != null ? parseFloat(r.usage).toFixed(2) : 'N/A'}</td>
-                    <td class="px-6 py-4">
-                        ${r.imageUrl ? `<a href="${r.imageUrl}" target="_blank" class="text-blue-600 hover:underline"><i class="fas fa-image"></i> ดูรูป</a>` : 'ไม่มี'}
-                    </td>
-                `;
-                tableBody.appendChild(row);
-            });
-
-            // Render charts
-            const labels = readings.map(r => new Date(r.date).toLocaleDateString('th-TH'));
-            const readingData = readings.map(r => r.reading);
-            const usageData = readings.map(r => r.usage || 0);
-
-            if (state.charts.readingChart) state.charts.readingChart.destroy();
-            if (state.charts.usageChart) state.charts.usageChart.destroy();
-
-            state.charts.readingChart = createChart('reading-chart', 'เลขมิเตอร์', labels, readingData, 'rgba(59, 130, 246, 0.8)', 'rgba(59, 130, 246, 0.2)');
-            state.charts.usageChart = createChart('usage-chart', 'การใช้งาน', labels, usageData, 'rgba(16, 185, 129, 0.8)', 'rgba(16, 185, 129, 0.2)');
-
-            houseDetailModal.classList.remove('hidden');
-        }
-
-        function createChart(canvasId, label, labels, data, borderColor, backgroundColor) {
-             const ctx = document.getElementById(canvasId).getContext('2d');
-             return new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: label,
-                        data: data,
-                        borderColor: borderColor,
-                        backgroundColor: backgroundColor,
-                        fill: true,
-                        tension: 0.1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: { y: { beginAtZero: false } }
-                }
-            });
-        }
-        
-        // --- LOGIC & EVENT HANDlers ---
         async function handleLogin(e) {
             e.preventDefault();
             const username = document.getElementById('username').value;
@@ -544,9 +133,8 @@
             const result = await apiCall('login', { username, password });
             
             if (result.status === 'success') {
-                state.currentUser = result.user;
                 sessionStorage.setItem('waterMeterUser', JSON.stringify(result.user));
-                initializeApp();
+                window.location.href = 'main.html';
             } else {
                 alert('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
             }
@@ -561,217 +149,12 @@
             if (result.status === 'success') {
                 alert('สมัครสมาชิกสำเร็จ! กรุณาเข้าสู่ระบบ');
                 switchAuthTab('login');
+                document.getElementById('register-form').reset();
             } else {
                 alert(result.message || 'เกิดข้อผิดพลาดในการสมัครสมาชิก');
             }
         }
-
-        function handleLogout() {
-            state.currentUser = null;
-            sessionStorage.removeItem('waterMeterUser');
-            state.currentView = 'auth';
-            document.getElementById('login-form').reset();
-            document.getElementById('register-form').reset();
-            switchAuthTab('login');
-            updateView();
-        }
         
-        async function loadDashboardData() {
-            const result = await apiCall('getHouses');
-            if(result.status === 'success') {
-                state.houses = result.data;
-                renderHouses();
-            }
-        }
-        
-        async function loadMonitorData() {
-            const result = await apiCall('getAllData');
-            if (result.status === 'success') {
-                state.houses = result.data.houses;
-                state.allReadings = result.data.readings;
-                renderMonitorView();
-            }
-        }
-
-        function openAddHouseModal() {
-            document.getElementById('add-house-form').reset();
-            addHouseModal.classList.remove('hidden');
-        }
-
-        async function handleAddHouse(e) {
-            e.preventDefault();
-            const name = document.getElementById('house-name').value;
-            const result = await apiCall('addHouse', { name });
-
-            if (result.status === 'success') {
-                addHouseModal.classList.add('hidden');
-                loadDashboardData();
-            } else {
-                alert(result.message || 'ไม่สามารถเพิ่มบ้านได้');
-            }
-        }
-        
-        async function openAddReadingModal(houseId) {
-            const house = state.houses.find(h => h.id === houseId);
-            if (!house) return;
-
-            document.getElementById('add-reading-form').reset();
-            document.getElementById('reading-house-id').value = house.id;
-            document.getElementById('reading-house-name').textContent = house.name;
-            document.getElementById('last-reading-display').textContent = house.lastReading != null ? house.lastReading : 'ยังไม่มีข้อมูล';
-            document.getElementById('last-reading-date-display').textContent = house.lastReadingDate ? new Date(house.lastReadingDate).toLocaleString('th-TH') : 'N/A';
-            
-            document.getElementById('image-preview-container').classList.add('hidden');
-            document.getElementById('ocr-status').textContent = '';
-
-            addReadingModal.classList.remove('hidden');
-        }
-        
-        async function handleAddReading(e) {
-            e.preventDefault();
-            const houseId = document.getElementById('reading-house-id').value;
-            const reading = document.getElementById('meter-reading').value;
-            const imageFile = document.getElementById('meter-image').files[0];
-            
-            const house = state.houses.find(h => h.id === houseId);
-            if (house.lastReading != null && parseFloat(reading) < parseFloat(house.lastReading)) {
-                if (!confirm('เลขมิเตอร์ปัจจุบันน้อยกว่าครั้งล่าสุด คุณแน่ใจหรือไม่ว่าต้องการบันทึก? (อาจเกิดจากการเปลี่ยนมิเตอร์)')) {
-                    return;
-                }
-            }
-
-            let payload = { houseId, reading };
-
-            if (imageFile) {
-                payload.image = await toBase64(imageFile);
-                payload.imageName = imageFile.name;
-                payload.imageMimeType = imageFile.type;
-            }
-
-            const result = await apiCall('addReading', payload);
-            if (result.status === 'success') {
-                addReadingModal.classList.add('hidden');
-                loadDashboardData();
-            } else {
-                alert(result.message || 'ไม่สามารถบันทึกข้อมูลได้');
-            }
-        }
-        
-        async function handleDeleteHouse(houseId) {
-            if (confirm('คุณต้องการลบบ้านหลังนี้และข้อมูลทั้งหมดใช่หรือไม่?')) {
-                const result = await apiCall('deleteHouse', { houseId });
-                if (result.status === 'success') {
-                    loadDashboardData();
-                } else {
-                    alert(result.message || 'ไม่สามารถลบบ้านได้');
-                }
-            }
-        }
-        
-        async function handleImageUpload(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const previewContainer = document.getElementById('image-preview-container');
-            const previewImg = document.getElementById('image-preview');
-            const ocrStatus = document.getElementById('ocr-status');
-
-            previewImg.src = URL.createObjectURL(file);
-            previewContainer.classList.remove('hidden');
-            ocrStatus.textContent = 'กำลังอ่านตัวเลขจากรูปภาพ...';
-
-            const base64Image = await toBase64(file);
-            const geminiPayload = {
-                "contents": [{
-                    "parts": [
-                        { "text": "Extract only the numerical value from this image of a water meter. Treat all digits as a single integer. Ignore any decimal points or separators. For example, if you see '123.4' or '1,234', return '1234'. Respond with only the resulting number string. If you cannot find a number, respond with 'error'." },
-                        { "inline_data": { "mime_type": file.type, "data": base64Image } }
-                    ]
-                }]
-            };
-
-            const extractedText = await geminiApiCall(geminiPayload);
-            const cleanedText = extractedText ? extractedText.replace(/\D/g, '') : '';
-
-            if(cleanedText && !isNaN(parseInt(cleanedText, 10))) {
-                document.getElementById('meter-reading').value = parseInt(cleanedText, 10);
-                ocrStatus.textContent = `เลขที่อ่านได้: ${cleanedText}`;
-                ocrStatus.classList.add('text-green-600');
-                ocrStatus.classList.remove('text-red-600');
-            } else {
-                ocrStatus.textContent = 'ไม่สามารถอ่านตัวเลขได้ กรุณากรอกด้วยตนเอง';
-                ocrStatus.classList.add('text-red-600');
-                ocrStatus.classList.remove('text-green-600');
-            }
-        }
-
-        async function handleChatbot(e) {
-            e.preventDefault();
-            const input = document.getElementById('chat-input');
-            const chatWindow = document.getElementById('chat-window');
-            const question = input.value.trim();
-            if (!question) return;
-
-            addChatMessage(question, 'user');
-            input.value = '';
-
-            // Prepare data context for Gemini
-            const contextData = JSON.stringify(
-                state.houses.map(h => ({
-                    name: h.name,
-                    totalUsage: h.totalUsage,
-                    readings: state.allReadings
-                        .filter(r => r.houseId === h.id)
-                        .map(r => ({ date: r.date, reading: r.reading, usage: r.usage }))
-                }))
-            );
-
-            const prompt = `You are a helpful assistant analyzing water usage data. Based ONLY on the following JSON data, answer the user's question in Thai.
-            Data: ${contextData}
-            User Question: ${question}
-            `;
-            
-            const geminiPayload = {
-                "contents": [{ "parts": [{ "text": prompt }] }]
-            };
-            
-            const answer = await geminiApiCall(geminiPayload);
-            addChatMessage(answer || "ขออภัย ฉันไม่สามารถตอบคำถามนี้ได้", 'bot');
-        }
-
-        function addChatMessage(message, sender) {
-            const chatWindow = document.getElementById('chat-window');
-            const messageDiv = document.createElement('div');
-            messageDiv.textContent = message;
-            if (sender === 'user') {
-                messageDiv.className = 'p-3 rounded-lg bg-gray-200 self-end max-w-lg mb-2';
-            } else {
-                messageDiv.className = 'p-3 rounded-lg bg-blue-100 text-blue-800 self-start max-w-lg mb-2';
-            }
-            chatWindow.appendChild(messageDiv);
-            chatWindow.scrollTop = chatWindow.scrollHeight;
-        }
-
-
-        // --- UTILITY FUNCTIONS ---
-        function toBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = () => resolve(reader.result.split(',')[1]);
-                reader.onerror = error => reject(error);
-            });
-        }
-        
-        function showLoading(text = 'กำลังโหลด...') {
-            loadingText.textContent = text;
-            loadingModal.classList.remove('hidden');
-        }
-        
-        function hideLoading() {
-            loadingModal.classList.add('hidden');
-        }
-
         function switchAuthTab(tab) {
              const loginTabBtn = document.getElementById('login-tab-btn');
              const registerTabBtn = document.getElementById('register-tab-btn');
@@ -790,88 +173,18 @@
                 registerContent.classList.add('active');
              }
         }
-        
-        // --- INITIALIZATION ---
-        function initializeApp() {
-            userDisplay.textContent = `สวัสดี, ${state.currentUser.username}`;
-            state.currentView = 'main';
-            state.currentAppPage = 'dashboard';
-            updateView();
-            loadDashboardData();
-        }
 
-        function attachEventListeners() {
-            // Auth
+        document.addEventListener('DOMContentLoaded', () => {
+            // Redirect if already logged in
+            if (sessionStorage.getItem('waterMeterUser')) {
+                window.location.href = 'main.html';
+                return;
+            }
+
             document.getElementById('login-form').addEventListener('submit', handleLogin);
             document.getElementById('register-form').addEventListener('submit', handleRegister);
             document.getElementById('login-tab-btn').addEventListener('click', () => switchAuthTab('login'));
             document.getElementById('register-tab-btn').addEventListener('click', () => switchAuthTab('register'));
-            document.getElementById('logout-btn').addEventListener('click', handleLogout);
-
-            // Navigation
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.addEventListener('click', async () => {
-                    state.currentAppPage = btn.dataset.view;
-                    updateAppPage();
-                    if(state.currentAppPage === 'dashboard') {
-                        await loadDashboardData();
-                    } else if (state.currentAppPage === 'monitor') {
-                        await loadMonitorData();
-                    }
-                });
-            });
-
-            // House Actions
-            document.getElementById('add-house-btn').addEventListener('click', openAddHouseModal);
-            document.getElementById('add-house-form').addEventListener('submit', handleAddHouse);
-            document.getElementById('cancel-add-house').addEventListener('click', () => addHouseModal.classList.add('hidden'));
-
-            // Reading Actions
-            document.getElementById('add-reading-form').addEventListener('submit', handleAddReading);
-            document.getElementById('cancel-add-reading').addEventListener('click', () => addReadingModal.classList.add('hidden'));
-            document.getElementById('meter-image').addEventListener('change', handleImageUpload);
-
-            // Detail Modal
-            document.getElementById('close-detail-modal').addEventListener('click', () => houseDetailModal.classList.add('hidden'));
-
-            // Dynamic event listeners for cards
-            houseList.addEventListener('click', e => {
-                const addBtn = e.target.closest('.add-reading-btn');
-                const deleteBtn = e.target.closest('.delete-house-btn');
-                const viewBtn = e.target.closest('.view-details-btn');
-                const card = e.target.closest('.bg-white.p-5');
-
-                if (addBtn) {
-                    openAddReadingModal(addBtn.dataset.houseId);
-                } else if(deleteBtn) {
-                    handleDeleteHouse(deleteBtn.dataset.houseId);
-                } else if(viewBtn) {
-                    loadMonitorData().then(() => renderHouseDetails(viewBtn.dataset.houseId));
-                } else if (card) {
-                    // Default card action can be view details too
-                    const viewButtonInside = card.querySelector('.view-details-btn');
-                    if (viewButtonInside) {
-                        loadMonitorData().then(() => renderHouseDetails(viewButtonInside.dataset.houseId));
-                    }
-                }
-            });
-            
-            // Chatbot
-            document.getElementById('chatbot-form').addEventListener('submit', handleChatbot);
-        }
-        
-        // --- APP START ---
-        document.addEventListener('DOMContentLoaded', () => {
-            attachEventListeners();
-            const savedUser = sessionStorage.getItem('waterMeterUser');
-            if (savedUser) {
-                state.currentUser = JSON.parse(savedUser);
-                initializeApp();
-            } else {
-                state.currentView = 'auth';
-                updateView();
-                switchAuthTab('login');
-            }
         });
     </script>
 </body>
