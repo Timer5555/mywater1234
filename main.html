@@ -15,7 +15,7 @@
         }
         .chart-container {
             position: relative;
-            height: 40vh;
+            height: 50vh;
             width: 100%;
         }
         /* Custom scrollbar */
@@ -161,18 +161,10 @@
                 <button id="close-detail-modal" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
             </div>
             <div class="overflow-y-auto pr-4 flex-1">
-                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <h4 class="text-xl font-semibold mb-2">กราฟเลขมิเตอร์ (หน่วย)</h4>
-                        <div class="chart-container">
-                            <canvas id="reading-chart"></canvas>
-                        </div>
-                    </div>
-                    <div>
-                        <h4 class="text-xl font-semibold mb-2">กราฟปริมาณการใช้น้ำ (หน่วย)</h4>
-                        <div class="chart-container">
-                            <canvas id="usage-chart"></canvas>
-                        </div>
+                 <div class="mb-6">
+                    <h4 class="text-xl font-semibold mb-2">กราฟภาพรวมการใช้งาน</h4>
+                    <div class="chart-container">
+                        <canvas id="combined-chart"></canvas>
                     </div>
                  </div>
                  <div class="mt-6">
@@ -227,8 +219,7 @@
             currentAppPage: 'dashboard', // dashboard, monitor
             allReadings: [],
             charts: {
-                readingChart: null,
-                usageChart: null,
+                combinedChart: null,
             }
         };
 
@@ -424,34 +415,67 @@
             const readingData = readings.map(r => r.reading);
             const usageData = readings.map(r => r.usage || 0);
 
-            if (state.charts.readingChart) state.charts.readingChart.destroy();
-            if (state.charts.usageChart) state.charts.usageChart.destroy();
+            if (state.charts.combinedChart) state.charts.combinedChart.destroy();
 
-            state.charts.readingChart = createChart('reading-chart', 'เลขมิเตอร์', labels, readingData, 'rgba(59, 130, 246, 0.8)', 'rgba(59, 130, 246, 0.2)');
-            state.charts.usageChart = createChart('usage-chart', 'การใช้งาน', labels, usageData, 'rgba(16, 185, 129, 0.8)', 'rgba(16, 185, 129, 0.2)');
-
+            state.charts.combinedChart = createCombinedChart('combined-chart', labels, readingData, usageData);
+            
             houseDetailModal.classList.remove('hidden');
         }
 
-        function createChart(canvasId, label, labels, data, borderColor, backgroundColor) {
-             const ctx = document.getElementById(canvasId).getContext('2d');
-             return new Chart(ctx, {
-                type: 'line',
+        function createCombinedChart(canvasId, labels, readingData, usageData) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            return new Chart(ctx, {
+                type: 'bar',
                 data: {
                     labels: labels,
-                    datasets: [{
-                        label: label,
-                        data: data,
-                        borderColor: borderColor,
-                        backgroundColor: backgroundColor,
-                        fill: true,
-                        tension: 0.1
-                    }]
+                    datasets: [
+                        {
+                            label: 'การใช้งาน (หน่วย)',
+                            data: usageData,
+                            backgroundColor: 'rgba(16, 185, 129, 0.5)',
+                            borderColor: 'rgba(16, 185, 129, 1)',
+                            yAxisID: 'y-usage',
+                            order: 2
+                        },
+                        {
+                            label: 'เลขมิเตอร์ (หน่วย)',
+                            data: readingData,
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                            type: 'line',
+                            fill: true,
+                            yAxisID: 'y-reading',
+                            tension: 0.1,
+                            order: 1
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    scales: { y: { beginAtZero: false } }
+                    scales: {
+                        'y-reading': {
+                            type: 'linear',
+                            position: 'left',
+                            beginAtZero: false,
+                            title: {
+                                display: true,
+                                text: 'เลขมิเตอร์สะสม'
+                            }
+                        },
+                        'y-usage': {
+                            type: 'linear',
+                            position: 'right',
+                            beginAtZero: true,
+                             title: {
+                                display: true,
+                                text: 'ปริมาณการใช้งาน'
+                            },
+                            grid: {
+                                drawOnChartArea: false, // only draw grid for one axis to avoid clutter
+                            },
+                        }
+                    }
                 }
             });
         }
