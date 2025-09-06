@@ -101,7 +101,7 @@
 
     <!-- Modals -->
     <!-- Add House Modal -->
-    <div id="add-house-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+    <div id="add-house-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-30">
         <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
             <h3 class="text-2xl font-bold mb-4">เพิ่มบ้านใหม่</h3>
             <form id="add-house-form">
@@ -118,25 +118,29 @@
     </div>
     
     <!-- Add Reading Modal -->
-    <div id="add-reading-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+    <div id="add-reading-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-30">
         <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-lg">
             <h3 class="text-2xl font-bold mb-4">บันทึกการใช้น้ำสำหรับ <span id="reading-house-name" class="text-blue-600"></span></h3>
             <form id="add-reading-form">
                 <input type="hidden" id="reading-house-id">
+                <input type="hidden" id="reading-image-base64">
+                <input type="hidden" id="reading-image-mimetype">
                 <div class="bg-blue-50 p-3 rounded-lg mb-4">
                     <p>เลขมิเตอร์ครั้งล่าสุด: <strong id="last-reading-display" class="text-lg">N/A</strong></p>
                     <p>บันทึกเมื่อ: <strong id="last-reading-date-display">N/A</strong></p>
                 </div>
-
                 <div class="mb-4">
                     <label class="block mb-2 font-semibold">เลขมิเตอร์ปัจจุบัน</label>
+                     <input type="number" step="1" id="meter-reading" class="w-full p-2 border rounded mb-2" placeholder="กรอกตัวเลข" required>
                     <div class="flex items-center gap-2">
-                        <input type="number" step="1" id="meter-reading" class="w-full p-2 border rounded" placeholder="กรอกตัวเลข" required>
-                        <span class="text-gray-500">หรือ</span>
-                         <label class="bg-gray-200 px-4 py-2 rounded-lg cursor-pointer hover:bg-gray-300">
-                            <i class="fas fa-camera mr-2"></i> อัปโหลดรูป
-                            <input type="file" id="meter-image" class="hidden" accept="image/*">
-                         </label>
+                        <span class="text-gray-500">แนบรูป:</span>
+                        <input type="file" id="meter-image-input" class="hidden" accept="image/*">
+                        <button type="button" id="upload-image-btn" class="bg-gray-200 px-4 py-2 rounded-lg hover:bg-gray-300 text-sm">
+                            <i class="fas fa-upload mr-2"></i>อัปโหลด
+                        </button>
+                        <button type="button" id="capture-image-btn" class="bg-teal-500 text-white px-4 py-2 rounded-lg hover:bg-teal-600 text-sm">
+                            <i class="fas fa-camera mr-2"></i>ถ่ายรูป
+                        </button>
                     </div>
                 </div>
 
@@ -152,13 +156,38 @@
             </form>
         </div>
     </div>
+    
+    <!-- Edit Reading Modal -->
+    <div id="edit-reading-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-40">
+        <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-lg">
+            <h3 class="text-2xl font-bold mb-4">แก้ไขรายการบันทึก</h3>
+            <form id="edit-reading-form">
+                <input type="hidden" id="edit-reading-id">
+                <div class="mb-4">
+                    <label for="edit-reading-date" class="block mb-2">วันที่และเวลา</label>
+                    <input type="datetime-local" id="edit-reading-date" class="w-full p-2 border rounded" required>
+                </div>
+                <div class="mb-4">
+                    <label for="edit-meter-reading" class="block mb-2 font-semibold">เลขมิเตอร์</label>
+                    <input type="number" step="1" id="edit-meter-reading" class="w-full p-2 border rounded" required>
+                </div>
+                <div class="flex justify-end gap-4 mt-6">
+                    <button type="button" id="cancel-edit-reading" class="bg-gray-300 px-4 py-2 rounded">ยกเลิก</button>
+                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">บันทึกการแก้ไข</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- House Detail Modal -->
-    <div id="house-detail-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+    <div id="house-detail-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-20">
         <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-2xl font-bold text-blue-700" id="detail-house-name"></h3>
-                <button id="close-detail-modal" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
+                <div>
+                     <button id="add-reading-from-detail-btn" class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition text-sm"><i class="fas fa-plus mr-2"></i>บันทึกการใช้งาน</button>
+                     <button id="close-detail-modal" class="text-gray-500 hover:text-gray-800 text-2xl ml-4 w-8 h-8">&times;</button>
+                </div>
             </div>
             <div class="overflow-y-auto pr-4 flex-1">
                  <div class="mb-6">
@@ -177,6 +206,7 @@
                                     <th scope="col" class="px-6 py-3">เลขมิเตอร์</th>
                                     <th scope="col" class="px-6 py-3">การใช้งาน</th>
                                     <th scope="col" class="px-6 py-3">รูปภาพ</th>
+                                    <th scope="col" class="px-6 py-3">จัดการ</th>
                                 </tr>
                             </thead>
                             <tbody id="history-table-body">
@@ -205,7 +235,6 @@
         </div>
     </div>
 
-
     <script type="module">
         // --- CONFIGURATION ---
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx2SSMQGcUOVr4TjNS5gVPKaM0wk9Xa8MC6IC50Y6mvYnGL5zgFsMDy_S6MqLyharOi/exec';
@@ -220,7 +249,8 @@
             allReadings: [],
             charts: {
                 combinedChart: null,
-            }
+            },
+            currentDetailHouseId: null,
         };
 
         // --- DOM ELEMENTS ---
@@ -235,6 +265,7 @@
         // Modals
         const addHouseModal = document.getElementById('add-house-modal');
         const addReadingModal = document.getElementById('add-reading-modal');
+        const editReadingModal = document.getElementById('edit-reading-modal');
         const houseDetailModal = document.getElementById('house-detail-modal');
         const imageModal = document.getElementById('image-modal');
         const loadingModal = document.getElementById('loading-modal');
@@ -283,7 +314,6 @@
                 hideLoading();
              }
         }
-
 
         // --- UI RENDERING ---
         function updateAppPage() {
@@ -365,7 +395,6 @@
 
             allHousesSummary.appendChild(summaryGrid);
 
-            // Overall Summary
             const overallContainer = document.createElement('div');
             overallContainer.className = 'mt-6 pt-4 border-t grid grid-cols-1 md:grid-cols-3 gap-4';
             overallContainer.innerHTML = `
@@ -385,10 +414,10 @@
                 </div>
             `;
             allHousesSummary.prepend(overallContainer);
-
         }
 
         function renderHouseDetails(houseId) {
+            state.currentDetailHouseId = houseId;
             const house = state.houses.find(h => h.id === houseId);
             const readings = state.allReadings.filter(r => r.houseId === houseId)
                                 .sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -400,12 +429,19 @@
             readings.forEach(r => {
                 const row = document.createElement('tr');
                 row.className = 'bg-white border-b';
+
                 row.innerHTML = `
                     <td class="px-6 py-4">${new Date(r.date).toLocaleString('th-TH')}</td>
                     <td class="px-6 py-4 font-medium text-gray-900">${r.reading}</td>
                     <td class="px-6 py-4 text-green-600">${r.usage != null ? parseFloat(r.usage).toFixed(2) : 'N/A'}</td>
                     <td class="px-6 py-4">
-                        ${r.imageUrl ? `<button data-img-src="${r.imageUrl}" class="view-image-btn text-blue-600 hover:underline"><i class="fas fa-image"></i> ดูรูป</button>` : 'ไม่มี'}
+                        ${r.imageUrl ? `<button data-file-id="${r.imageUrl}" class="view-image-btn text-blue-600 hover:underline"><i class="fas fa-image"></i> ดูรูป</button>` : 'ไม่มี'}
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex gap-3">
+                           <button data-reading-id="${r.id}" class="edit-reading-btn text-gray-400 hover:text-yellow-600"><i class="fas fa-edit"></i></button>
+                           <button data-reading-id="${r.id}" class="delete-reading-btn text-gray-400 hover:text-red-600"><i class="fas fa-trash"></i></button>
+                        </div>
                     </td>
                 `;
                 tableBody.appendChild(row);
@@ -458,22 +494,14 @@
                             type: 'linear',
                             position: 'left',
                             beginAtZero: false,
-                            title: {
-                                display: true,
-                                text: 'เลขมิเตอร์สะสม'
-                            }
+                            title: { display: true, text: 'เลขมิเตอร์สะสม' }
                         },
                         'y-usage': {
                             type: 'linear',
                             position: 'right',
                             beginAtZero: true,
-                             title: {
-                                display: true,
-                                text: 'ปริมาณการใช้งาน'
-                            },
-                            grid: {
-                                drawOnChartArea: false, // only draw grid for one axis to avoid clutter
-                            },
+                             title: { display: true, text: 'ปริมาณการใช้งาน' },
+                            grid: { drawOnChartArea: false },
                         }
                     }
                 }
@@ -517,8 +545,6 @@
             if (result.status === 'success') {
                 addHouseModal.classList.add('hidden');
                 loadDashboardData();
-            } else {
-                alert(result.message || 'ไม่สามารถเพิ่มบ้านได้');
             }
         }
         
@@ -542,7 +568,9 @@
             e.preventDefault();
             const houseId = document.getElementById('reading-house-id').value;
             const reading = document.getElementById('meter-reading').value;
-            const imageFile = document.getElementById('meter-image').files[0];
+            const imageBase64 = document.getElementById('reading-image-base64').value;
+            const imageMimeType = document.getElementById('reading-image-mimetype').value;
+
             
             const house = state.houses.find(h => h.id === houseId);
             if (house.lastReading != null && parseFloat(reading) < parseFloat(house.lastReading)) {
@@ -551,19 +579,22 @@
                 }
             }
 
-            let payload = { houseId, reading };
-
-            if (imageFile) {
-                payload.imageBase64 = await toBase64(imageFile);
-                payload.imageMimeType = imageFile.type;
-            }
-
+            const payload = { 
+                houseId, 
+                reading, 
+                imageBase64: imageBase64 || '', 
+                imageMimeType: imageMimeType || '' 
+            };
             const result = await apiCall('addReading', payload);
+
             if (result.status === 'success') {
                 addReadingModal.classList.add('hidden');
-                loadDashboardData();
-            } else {
-                alert(result.message || 'ไม่สามารถบันทึกข้อมูลได้');
+                if (houseDetailModal.classList.contains('hidden')) {
+                    loadDashboardData();
+                } else {
+                    await loadMonitorData();
+                    renderHouseDetails(houseId);
+                }
             }
         }
         
@@ -572,14 +603,49 @@
                 const result = await apiCall('deleteHouse', { houseId });
                 if (result.status === 'success') {
                     loadDashboardData();
-                } else {
-                    alert(result.message || 'ไม่สามารถลบบ้านได้');
                 }
             }
         }
         
-        async function handleImageUpload(e) {
-            const file = e.target.files[0];
+        function openEditReadingModal(readingId) {
+            const reading = state.allReadings.find(r => r.id === readingId);
+            if (!reading) return;
+            
+            document.getElementById('edit-reading-form').reset();
+            document.getElementById('edit-reading-id').value = reading.id;
+            document.getElementById('edit-meter-reading').value = reading.reading;
+            const date = new Date(reading.date);
+            date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+            document.getElementById('edit-reading-date').value = date.toISOString().slice(0,16);
+
+            editReadingModal.classList.remove('hidden');
+        }
+
+        async function handleUpdateReading(e) {
+            e.preventDefault();
+            const readingId = document.getElementById('edit-reading-id').value;
+            const newReadingValue = document.getElementById('edit-meter-reading').value;
+            const newDateValue = new Date(document.getElementById('edit-reading-date').value).toISOString();
+
+            const result = await apiCall('updateReading', { readingId, newReadingValue, newDateValue });
+            if (result.status === 'success') {
+                editReadingModal.classList.add('hidden');
+                await loadMonitorData();
+                renderHouseDetails(state.currentDetailHouseId);
+            }
+        }
+        
+        async function handleDeleteReading(readingId) {
+            if (confirm('คุณต้องการลบรายการบันทึกนี้ใช่หรือไม่?')) {
+                const result = await apiCall('deleteReading', { readingId });
+                if (result.status === 'success') {
+                    await loadMonitorData();
+                    renderHouseDetails(state.currentDetailHouseId);
+                }
+            }
+        }
+
+        async function processImageFile(file) {
             if (!file) return;
 
             const previewContainer = document.getElementById('image-preview-container');
@@ -588,14 +654,18 @@
 
             previewImg.src = URL.createObjectURL(file);
             previewContainer.classList.remove('hidden');
-            ocrStatus.textContent = 'กำลังอ่านตัวเลขจากรูปภาพ...';
+            ocrStatus.textContent = 'กำลังย่อขนาดและอ่านตัวเลข...';
 
-            const base64Image = await toBase64(file);
+            // Resize image and get base64 components
+            const { base64, mimeType } = await resizeImage(file, 800);
+            document.getElementById('reading-image-base64').value = base64;
+            document.getElementById('reading-image-mimetype').value = mimeType;
+            
             const geminiPayload = {
                 "contents": [{
                     "parts": [
                         { "text": "Extract only the numerical value from this image of a water meter. Treat all digits as a single integer. Ignore any decimal points or separators. For example, if you see '123.4' or '1,234', return '1234'. Respond with only the resulting number string. If you cannot find a number, respond with 'error'." },
-                        { "inline_data": { "mime_type": file.type, "data": base64Image } }
+                        { "inline_data": { "mime_type": mimeType, "data": base64 } }
                     ]
                 }]
             };
@@ -634,15 +704,8 @@
                 }))
             );
 
-            const prompt = `You are a helpful assistant analyzing water usage data. Based ONLY on the following JSON data, answer the user's question in Thai.
-            Data: ${contextData}
-            User Question: ${question}
-            `;
-            
-            const geminiPayload = {
-                "contents": [{ "parts": [{ "text": prompt }] }]
-            };
-            
+            const prompt = `You are a helpful assistant analyzing water usage data. Based ONLY on the following JSON data, answer the user's question in Thai. Data: ${contextData} User Question: ${question}`;
+            const geminiPayload = { "contents": [{ "parts": [{ "text": prompt }] }] };
             const answer = await geminiApiCall(geminiPayload);
             addChatMessage(answer || "ขออภัย ฉันไม่สามารถตอบคำถามนี้ได้", 'bot');
         }
@@ -651,22 +714,44 @@
             const chatWindow = document.getElementById('chat-window');
             const messageDiv = document.createElement('div');
             messageDiv.textContent = message;
-            if (sender === 'user') {
-                messageDiv.className = 'p-3 rounded-lg bg-gray-200 self-end max-w-lg mb-2';
-            } else {
-                messageDiv.className = 'p-3 rounded-lg bg-blue-100 text-blue-800 self-start max-w-lg mb-2';
-            }
+            messageDiv.className = sender === 'user'
+                ? 'p-3 rounded-lg bg-gray-200 self-end max-w-lg mb-2'
+                : 'p-3 rounded-lg bg-blue-100 text-blue-800 self-start max-w-lg mb-2';
             chatWindow.appendChild(messageDiv);
             chatWindow.scrollTop = chatWindow.scrollHeight;
         }
 
         // --- UTILITY FUNCTIONS ---
-        function toBase64(file) {
+        function resizeImage(file, maxWidth) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > maxWidth) {
+                            height *= maxWidth / width;
+                            width = maxWidth;
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        const dataUri = canvas.toDataURL(file.type);
+                        resolve({
+                            base64: dataUri.split(',')[1],
+                            mimeType: dataUri.split(',')[0].split(':')[1].split(';')[0]
+                        });
+                    };
+                    img.onerror = reject;
+                    img.src = event.target.result;
+                };
+                reader.onerror = reject;
                 reader.readAsDataURL(file);
-                reader.onload = () => resolve(reader.result.split(',')[1]);
-                reader.onerror = error => reject(error);
             });
         }
         
@@ -688,16 +773,12 @@
 
         function attachEventListeners() {
             document.getElementById('logout-btn').addEventListener('click', handleLogout);
-
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 btn.addEventListener('click', async () => {
                     state.currentAppPage = btn.dataset.view;
                     updateAppPage();
-                    if(state.currentAppPage === 'dashboard') {
-                        await loadDashboardData();
-                    } else if (state.currentAppPage === 'monitor') {
-                        await loadMonitorData();
-                    }
+                    if(state.currentAppPage === 'dashboard') await loadDashboardData();
+                    else if (state.currentAppPage === 'monitor') await loadMonitorData();
                 });
             });
 
@@ -707,9 +788,23 @@
 
             document.getElementById('add-reading-form').addEventListener('submit', handleAddReading);
             document.getElementById('cancel-add-reading').addEventListener('click', () => addReadingModal.classList.add('hidden'));
-            document.getElementById('meter-image').addEventListener('change', handleImageUpload);
+            
+            const meterImageInput = document.getElementById('meter-image-input');
+            document.getElementById('upload-image-btn').addEventListener('click', () => {
+                meterImageInput.removeAttribute('capture');
+                meterImageInput.click();
+            });
+             document.getElementById('capture-image-btn').addEventListener('click', () => {
+                meterImageInput.setAttribute('capture', 'environment');
+                meterImageInput.click();
+            });
+            meterImageInput.addEventListener('change', (e) => processImageFile(e.target.files[0]));
+            
+            document.getElementById('edit-reading-form').addEventListener('submit', handleUpdateReading);
+            document.getElementById('cancel-edit-reading').addEventListener('click', () => editReadingModal.classList.add('hidden'));
 
             document.getElementById('close-detail-modal').addEventListener('click', () => houseDetailModal.classList.add('hidden'));
+            document.getElementById('add-reading-from-detail-btn').addEventListener('click', () => openAddReadingModal(state.currentDetailHouseId));
 
             houseList.addEventListener('click', e => {
                 const addBtn = e.target.closest('.add-reading-btn');
@@ -728,12 +823,29 @@
             
             document.getElementById('chatbot-form').addEventListener('submit', handleChatbot);
 
-            // Image Modal Listeners
-            document.getElementById('history-table-body').addEventListener('click', (e) => {
+            document.getElementById('history-table-body').addEventListener('click', async (e) => {
                 const viewImageBtn = e.target.closest('.view-image-btn');
+                const editReadingBtn = e.target.closest('.edit-reading-btn');
+                const deleteReadingBtn = e.target.closest('.delete-reading-btn');
+
                 if (viewImageBtn) {
-                    document.getElementById('modal-image').src = viewImageBtn.dataset.imgSrc;
+                    const fileId = viewImageBtn.dataset.fileId;
+                    const modalImage = document.getElementById('modal-image');
+                    // Show modal with a placeholder while loading
+                    modalImage.src = 'https://placehold.co/600x400/FFF/333?text=Loading...';
                     imageModal.classList.remove('hidden');
+
+                    const result = await apiCall('getImage', { fileId });
+                    if (result.status === 'success' && result.data.base64Data) {
+                        modalImage.src = `data:${result.data.mimeType};base64,${result.data.base64Data}`;
+                    } else {
+                        modalImage.src = 'https://placehold.co/600x400/FFF/333?text=Image+Error';
+                        alert(result.message || 'ไม่สามารถโหลดรูปภาพได้');
+                    }
+                } else if (editReadingBtn) {
+                    openEditReadingModal(editReadingBtn.dataset.readingId);
+                } else if (deleteReadingBtn) {
+                    handleDeleteReading(deleteReadingBtn.dataset.readingId);
                 }
             });
             document.getElementById('close-image-modal').addEventListener('click', () => imageModal.classList.add('hidden'));
@@ -744,7 +856,6 @@
             });
         }
         
-        // --- APP START ---
         document.addEventListener('DOMContentLoaded', () => {
             const savedUser = sessionStorage.getItem('waterMeterUser');
             if (savedUser) {
