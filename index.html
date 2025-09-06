@@ -5,85 +5,83 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Water Meter Logger</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display.swap');
-        body {
-            font-family: 'Kanit', sans-serif;
+        body { font-family: 'Kanit', sans-serif; }
+        .tab-btn.active {
+            border-color: #3b82f6;
+            color: #3b82f6;
         }
-        .loader {
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #3498db;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .auth-tab {
-            cursor: pointer;
-            padding: 0.75rem 1rem;
-            color: #6b7280; /* text-gray-500 */
-            border-bottom: 2px solid transparent;
-        }
-        .auth-tab.active {
-            color: #2563eb; /* text-blue-600 */
-            border-bottom-color: #2563eb; /* border-blue-600 */
-        }
-        .auth-content { display: none; }
-        .auth-content.active { display: block; }
     </style>
 </head>
-<body class="bg-sky-50 text-gray-800">
+<body class="bg-sky-50 flex items-center justify-center min-h-screen p-4">
 
-    <!-- Auth View -->
-    <div id="auth-view" class="min-h-screen flex items-center justify-center bg-blue-50">
-        <div class="w-full max-w-md bg-white rounded-xl shadow-lg overflow-hidden">
-            <div class="flex border-b">
-                <div id="login-tab-btn" class="auth-tab active flex-1 text-center font-semibold">เข้าสู่ระบบ</div>
-                <div id="register-tab-btn" class="auth-tab flex-1 text-center font-semibold">สมัครสมาชิก</div>
-            </div>
-            <div class="p-8">
-                <!-- Login Form -->
-                <div id="login-content" class="auth-content active">
-                    <h2 class="text-3xl font-bold text-center text-blue-600 mb-6">ยินดีต้อนรับ</h2>
-                    <form id="login-form">
-                        <div class="mb-4">
-                            <label for="username" class="block text-gray-700 mb-2">ชื่อผู้ใช้</label>
-                            <input type="text" id="username" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                        </div>
-                        <div class="mb-6">
-                            <label for="password" class="block text-gray-700 mb-2">รหัสผ่าน</label>
-                            <input type="password" id="password" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                        </div>
-                        <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-300">เข้าสู่ระบบ</button>
-                    </form>
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
+        <div class="text-center mb-8">
+            <i class="fas fa-faucet-drip text-5xl text-blue-500"></i>
+            <h1 class="text-3xl font-bold text-gray-800 mt-4">Water Meter Logger</h1>
+            <p class="text-gray-500">บันทึกการใช้น้ำประปาของคุณ</p>
+        </div>
+
+        <!-- Tabs -->
+        <div class="mb-6 border-b border-gray-200">
+            <nav class="flex -mb-px" aria-label="Tabs">
+                <button id="login-tab-btn" class="tab-btn active w-1/2 py-4 px-1 text-center border-b-2 font-medium text-sm">
+                    เข้าสู่ระบบ
+                </button>
+                <button id="register-tab-btn" class="tab-btn w-1/2 py-4 px-1 text-center border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                    สมัครสมาชิก
+                </button>
+            </nav>
+        </div>
+
+        <!-- Login Form -->
+        <div id="login-form-container">
+            <form id="login-form">
+                <div class="mb-4">
+                    <label for="login-username" class="block text-sm font-medium text-gray-700 mb-1">ชื่อผู้ใช้</label>
+                    <input type="text" id="login-username" name="username" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
                 </div>
-                <!-- Register Form -->
-                <div id="register-content" class="auth-content">
-                    <h2 class="text-3xl font-bold text-center text-blue-600 mb-6">สร้างบัญชีใหม่</h2>
-                    <form id="register-form">
-                        <div class="mb-4">
-                            <label for="reg-username" class="block text-gray-700 mb-2">ชื่อผู้ใช้</label>
-                            <input type="text" id="reg-username" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                        </div>
-                        <div class="mb-4">
-                            <label for="reg-password" class="block text-gray-700 mb-2">รหัสผ่าน</label>
-                            <input type="password" id="reg-password" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                        </div>
-                        <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-300">สมัครสมาชิก</button>
-                    </form>
+                <div class="mb-6">
+                    <label for="login-password" class="block text-sm font-medium text-gray-700 mb-1">รหัสผ่าน</label>
+                    <input type="password" id="login-password" name="password" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
                 </div>
-            </div>
+                <button type="submit" class="w-full bg-blue-600 text-white p-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                    เข้าสู่ระบบ
+                </button>
+            </form>
+        </div>
+
+        <!-- Register Form -->
+        <div id="register-form-container" class="hidden">
+            <form id="register-form">
+                <div class="mb-4">
+                    <label for="register-username" class="block text-sm font-medium text-gray-700 mb-1">ชื่อผู้ใช้</label>
+                    <input type="text" id="register-username" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
+                </div>
+                <div class="mb-4">
+                    <label for="register-password" class="block text-sm font-medium text-gray-700 mb-1">รหัสผ่าน</label>
+                    <input type="password" id="register-password" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
+                </div>
+                 <div class="mb-6">
+                    <label for="register-confirm-password" class="block text-sm font-medium text-gray-700 mb-1">ยืนยันรหัสผ่าน</label>
+                    <input type="password" id="register-confirm-password" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
+                </div>
+                <button type="submit" class="w-full bg-green-600 text-white p-3 rounded-lg font-semibold hover:bg-green-700 transition-colors">
+                    สร้างบัญชี
+                </button>
+            </form>
         </div>
     </div>
     
     <!-- Loading Modal -->
     <div id="loading-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-        <div class="bg-white p-8 rounded-lg shadow-xl flex flex-col items-center">
-             <div class="loader mb-4"></div>
+        <div class="bg-white p-8 rounded-lg shadow-xl flex items-center">
+             <svg class="animate-spin h-5 w-5 mr-3 text-blue-500" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
              <p id="loading-text" class="text-lg font-semibold">กำลังประมวลผล...</p>
         </div>
     </div>
@@ -91,31 +89,38 @@
     <script type="module">
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx2SSMQGcUOVr4TjNS5gVPKaM0wk9Xa8MC6IC50Y6mvYnGL5zgFsMDy_S6MqLyharOi/exec';
 
+        const loginTabBtn = document.getElementById('login-tab-btn');
+        const registerTabBtn = document.getElementById('register-tab-btn');
+        const loginFormContainer = document.getElementById('login-form-container');
+        const registerFormContainer = document.getElementById('register-form-container');
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
         const loadingModal = document.getElementById('loading-modal');
-        const loadingText = document.getElementById('loading-text');
 
         function showLoading(text = 'กำลังโหลด...') {
-            loadingText.textContent = text;
+            document.getElementById('loading-text').textContent = text;
             loadingModal.classList.remove('hidden');
         }
         
         function hideLoading() {
             loadingModal.classList.add('hidden');
         }
-
+        
         async function apiCall(action, payload = {}) {
-            showLoading();
+            showLoading('กำลังดำเนินการ...');
             try {
                 const response = await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
-                    body: JSON.stringify({ action, ...payload }),
+                    body: JSON.stringify({ action, ...payload })
                 });
 
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                
+                if (!response.ok) {
+                    throw new Error(`เกิดข้อผิดพลาดจากเซิร์ฟเวอร์: ${response.status}`);
+                }
                 const result = await response.json();
-                if (result.status === 'error') throw new Error(result.message);
-                
+                if (result.status === 'error') {
+                    throw new Error(result.message);
+                }
                 return result;
             } catch (error) {
                 console.error('API Call Error:', error);
@@ -128,64 +133,64 @@
 
         async function handleLogin(e) {
             e.preventDefault();
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
+            const username = loginForm.username.value.trim();
+            const password = loginForm.password.value.trim();
+            if (!username || !password) {
+                alert('กรุณากรอกชื่อผู้ใช้และรหัสผ่าน');
+                return;
+            }
             const result = await apiCall('login', { username, password });
-            
-            if (result.status === 'success') {
+
+            if (result.status === 'success' && result.user) {
                 sessionStorage.setItem('waterMeterUser', JSON.stringify(result.user));
                 window.location.href = 'main.html';
             } else {
-                alert('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
+                 // The apiCall function already shows an alert on error.
             }
         }
 
         async function handleRegister(e) {
             e.preventDefault();
-            const username = document.getElementById('reg-username').value;
-            const password = document.getElementById('reg-password').value;
-            const result = await apiCall('register', { username, password });
+            const username = registerForm.querySelector('#register-username').value.trim();
+            const password = registerForm.querySelector('#register-password').value.trim();
+            const confirmPassword = registerForm.querySelector('#register-confirm-password').value.trim();
 
-            if (result.status === 'success') {
-                alert('สมัครสมาชิกสำเร็จ! กรุณาเข้าสู่ระบบ');
-                switchAuthTab('login');
-                document.getElementById('register-form').reset();
-            } else {
-                alert(result.message || 'เกิดข้อผิดพลาดในการสมัครสมาชิก');
-            }
-        }
-        
-        function switchAuthTab(tab) {
-             const loginTabBtn = document.getElementById('login-tab-btn');
-             const registerTabBtn = document.getElementById('register-tab-btn');
-             const loginContent = document.getElementById('login-content');
-             const registerContent = document.getElementById('register-content');
-
-             if (tab === 'login') {
-                loginTabBtn.classList.add('active');
-                registerTabBtn.classList.remove('active');
-                loginContent.classList.add('active');
-                registerContent.classList.remove('active');
-             } else {
-                loginTabBtn.classList.remove('active');
-                registerTabBtn.classList.add('active');
-                loginContent.classList.remove('active');
-                registerContent.classList.add('active');
-             }
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            // Redirect if already logged in
-            if (sessionStorage.getItem('waterMeterUser')) {
-                window.location.href = 'main.html';
+            if (!username || !password) {
+                alert('กรุณากรอกชื่อผู้ใช้และรหัสผ่าน');
                 return;
             }
+            if (password !== confirmPassword) {
+                alert('รหัสผ่านไม่ตรงกัน');
+                return;
+            }
+            
+            const result = await apiCall('register', { username, password });
+            if (result.status === 'success') {
+                alert('สมัครสมาชิกสำเร็จ! กรุณาเข้าสู่ระบบ');
+                loginTabBtn.click();
+                loginForm.username.value = username;
+                loginForm.password.focus();
+            } else {
+                 // The apiCall function already shows an alert on error.
+            }
+        }
 
-            document.getElementById('login-form').addEventListener('submit', handleLogin);
-            document.getElementById('register-form').addEventListener('submit', handleRegister);
-            document.getElementById('login-tab-btn').addEventListener('click', () => switchAuthTab('login'));
-            document.getElementById('register-tab-btn').addEventListener('click', () => switchAuthTab('register'));
+        loginTabBtn.addEventListener('click', () => {
+            loginTabBtn.classList.add('active');
+            registerTabBtn.classList.remove('active');
+            loginFormContainer.classList.remove('hidden');
+            registerFormContainer.classList.add('hidden');
         });
+
+        registerTabBtn.addEventListener('click', () => {
+            registerTabBtn.classList.add('active');
+            loginTabBtn.classList.remove('active');
+            registerFormContainer.classList.remove('hidden');
+            loginFormContainer.classList.add('hidden');
+        });
+
+        loginForm.addEventListener('submit', handleLogin);
+        registerForm.addEventListener('submit', handleRegister);
     </script>
 </body>
 </html>
